@@ -1,0 +1,5 @@
+class VisualizerCanvas {
+  constructor(div) {
+
+  }
+}
