@@ -8,6 +8,10 @@ class SimMap {
     this.fertility_base = fertility_base;
     this.fertility_range = fertility_range;
     this.cells = this._generateMap();
+
+    //constants
+    this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width);
+    this.VERTICAL_AXIS_RANGE = new Range(0, this.height);
   }
 
   _generateMap() {

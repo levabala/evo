@@ -12,15 +12,19 @@ class SimMaster {
     this.simulationTimeout = null;
   }
 
-  initSimulation(map) {
+  resetSimulation() {
     clearTimeout(this.simulationTimeout);
     this.map_controller.reset();
     this.creatures_controller.reset();
   }
 
+  startSimulation() {
+    this.continueSimulation();
+  }
+
   continueSimulation() {
     this.lastTimecode = Date.now();
-    this.simulationTimeout = setTimeout(this.simulationTick, 0);
+    this.simulationTimeout = setTimeout(this.simulationTick.bind(this), 0);
   }
 
   pauseSimulation() {
@@ -36,6 +40,6 @@ class SimMaster {
     this.creatures_controller.tick(timeDelta);
 
     var nextTickDelay = Math.max(this.tick_interval - (Date.now() - nowTime), 0);
-    this.simulationTimeout = setTimeout(this.simulationTick, nextTickDelay);
+    this.simulationTimeout = setTimeout(this.simulationTick.bind(this), nextTickDelay);
   }
 }
