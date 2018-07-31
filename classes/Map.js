@@ -23,4 +23,8 @@ class SimMap {
     }
     return map;
   }
+
+  cellAtPoint(p) {
+    return this.map.cells[p.x][p.y];
+  }
 }

@@ -59,3 +59,13 @@ class P {
     return this.x + ":" + this.y;
   }
 }
+
+function cloneObj(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function clone2dArr(array) {
+  return array.map(function(arr) {
+    return arr.slice();
+  });
+}

@@ -6,10 +6,13 @@ class CreaturesController {
     this.map = map;
     this.creatures_counter = 0;
     this.creatures = {};
+    this.maximal_generation = 0;
+    this.maximal_age = 0;
 
     //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.05//0.005; //creatures per cell
+    this.MINIMAL_CREATURES_DENSITY = 0.1//0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
+    this.AFTER_SPLIT_SATIETY = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
     this.NEW_CREATURE_EVENT = "new_creature";
     this.DEAD_CREATURE_EVENT = "deawd_creature";
@@ -17,7 +20,10 @@ class CreaturesController {
     this.MOVE_CREATURES_EVENT = "move_creatures";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.01;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.005;
+    this.CHILD_NET_MUTATE_RANGE = new Range(-0.00001, 0.0001);
+    this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.0005, 0.0005);
+    this.MINIMAL_SATIETY_ALIVE = 0.05;
 
     //other
     this._debug = false;
@@ -34,12 +40,19 @@ class CreaturesController {
     let added = 0;
     while (this._checkCreaturesLimit() && added++ < 10) { }
 
+    this.maximal_generation = 0;
+    this.maximal_age = 0;
     //all creatures tick
     for (var creature of Object.values(this.creatures)) {
       creature.tick(time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE;
-      if (creature.satiety <= 0)
+      if (isNaN(creature.satiety))
+        debugger;
+      if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature)
+
+      this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
+      this.maximal_age = Math.max(this.maximal_age, creature.age);
     }
   }
 
@@ -60,6 +73,52 @@ class CreaturesController {
     return view_zone;
   }
 
+  _splitCreature(creature) {
+    let center = creature.coordinates;
+
+    //square 3x3 without the center
+    let deltas = [
+      new P(1, 0), new P(1, 1), new P(0, 1),
+      new P(-1, 1), new P(-1, 0), new P(-1, -1),
+      new P(0, -1), new P(1, -1)];
+
+    let free_deltas = deltas.filter(
+      function(delta) {
+        let pos = center.clone().add(delta);
+        if (!pos.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE))
+          return false;
+        let cell_creatures_count = Object.keys(
+          this.map.cellAtPoint.bind(this)(pos)
+            .walking_creatures).length;
+        return cell_creatures_count == 0;
+      }.bind(this)
+    );
+    if (free_deltas.length == 0) {
+      return;
+    }
+
+    let spawn_position = center.clone().add(free_deltas[
+      Math.floor(
+        Math.random() * (free_deltas.length - 1)
+      )
+    ]);
+    let new_creature =
+      creature.clone()
+        .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
+        .mutateNets(this.CHILD_NET_MUTATE_RANGE);
+    new_creature.coordinates = spawn_position;
+    new_creature.satiety = this.NEW_CREATURE_SATIETY;
+    this.creatures_counter++;
+    new_creature.id = this.creatures_counter;
+    new_creature.generation = creature.generation + 1;
+    new_creature.fatigue = 0;
+
+    this._processNewCreature(new_creature);
+    this.addCreature(new_creature);
+
+    creature.satiety = this.AFTER_SPLIT_SATIETY;
+  }
+
   _checkCreaturesLimit() {
     let creatures_density = this._creaturesDensity();
     if (creatures_density < this.MINIMAL_CREATURES_DENSITY) {
@@ -78,32 +137,55 @@ class CreaturesController {
   }
 
   addCreature(creature) {
+    this.map.cells[creature.coordinates.x][creature.coordinates.y].walking_creatures[creature.id] = creature;
     this.creatures[creature.id] = creature;
     this.dispatchEvent(this.NEW_CREATURE_EVENT, creature);
-    console.log("new creature #" + creature.id);
   }
 
   _removeCreature(creature) {
     this.dispatchEvent(this.DEAD_CREATURE_EVENT, creature);
     delete this.creatures[creature.id];
+    delete this.map.cells[creature.coordinates.x][creature.coordinates.y].walking_creatures[creature.id];
   }
 
   _generateAndAddCreature() {
     this.addCreature((this._generateCreature(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE)));
   }
 
-  _generateCreature(x_range, y_range) {
+  _generateCreature(x_range, y_range, parent_action_net = null, parent_move_net = null) {
     this.creatures_counter++;
     var creature = new Creature(
-      this.creatures_counter - 1,
+      this.creatures_counter,
       new P(Math.floor(x_range.generateNumber()), Math.floor(y_range.generateNumber())),
       this.NEW_CREATURE_SATIETY,
       this.TOXICIETY_RESISTANCE,
       Math.random(),
       this.viewZoneGetter.bind(this),
-      this._generateActionNet(),
-      this._generateMoveNet()
-    )
+      parent_action_net ? parent_action_net : this._generateActionNet(),
+      parent_move_net ? parent_move_net : this._generateMoveNet()
+    );
+    this._processNewCreature(creature);
+    return creature;
+  }
+
+  _generateCreatureAtPosition(pos, parent_action_net = null, parent_move_net = null) {
+    this.creatures_counter++;
+    var creature = new Creature(
+      this.creatures_counter,
+      pos,
+      this.NEW_CREATURE_SATIETY,
+      this.TOXICIETY_RESISTANCE,
+      Math.random(),
+      this.viewZoneGetter.bind(this),
+      parent_action_net ? parent_action_net : this._generateActionNet(),
+      parent_move_net ? parent_move_net : this._generateMoveNet()
+    );
+    this._processNewCreature(creature);
+    return creature;
+  }
+
+  _processNewCreature(creature) {
+    creature
       .addEventListener(
         "wanna_move",
         function(new_position) {
@@ -111,15 +193,30 @@ class CreaturesController {
         }.bind(this))
       .addEventListener(
         "wanna_eat",
+        function() {
+          creature.eat(this.map.cells[creature.coordinates.x][creature.coordinates.y]);
+        }.bind(this))
+      .addEventListener(
+        "wanna_split",
         function(pos) {
-          creature.eat(this.map.cells[pos.x][pos.y]);
+          this._splitCreature(creature);
         }.bind(this));
-    return creature;
   }
 
   _creatureWannaMove(creature, new_position) {
     if (new_position.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE)) {
+      //remove from last cell
+      let previous_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+      delete previous_cell[creature.id];
+
+      //update coordinates
       creature.coordinates = new_position;
+
+      //add to new one
+      let cell = this.map.cells[new_position.x][new_position.y];
+      cell.walking_creatures[creature.id] = creature;
+
+      //notify controller&visualizer
       this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);
       if (this._debug)
         creature.say("moved to " + new_position);
@@ -138,11 +235,11 @@ class CreaturesController {
 
   _generateActionNet() {
     //input: viewzone(4 cells -> x2(food_type + food_amount)) + satiety
-    //output: move/eat/none
+    //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
-      [[v, v, v], [v, v, v], [v, v, v]], //output
+      [[v, v], [v, v], [v, v]], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
       ),
@@ -153,11 +250,11 @@ class CreaturesController {
 
   _generateMoveNet() {
     //input: viewzone(4 cells -> x2(food_type + food_amount)) + satiety
-    //output: right/bottom/left/up/none
+    //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
-      [[v, v, v, v, v], [v, v, v, v, v], [v, v, v, v, v]], //output
+      [[v, v, v, v], [v, v, v, v], [v, v, v, v]], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
       ),

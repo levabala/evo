@@ -11,17 +11,21 @@ class Creature {
     this.eating_type = eating_type;
     this.coordinates = coordinates;
     this.request_view_zone = request_view_zone;
+    this.age = 0;
     this.fatigue = 1;
     this.timecode = Date.now();
+    this.generation = 1;
 
     //neural networks
     this.action_net = action_net;
     this.move_net = move_net;
 
     //constants
-    this.FOOD_VARIETY = 1; //less than 1 -> bad, more than 1 -> good
+    this.FOOD_VARIETY = 4; //less than 1 -> bad, more than 1 -> good
     this.FATIGUE_DONWGRADE = 0.2;
     this.SPLIT_SATIETY_NEEDED = 0.95;
+    this.FOOD_MULTIPLITER = 2;
+    this.MAX_AGE = 50 * 1000; //seconds
 
     //events
     this.registerEvent("wanna_eat");
@@ -29,11 +33,32 @@ class Creature {
     this.registerEvent("wanna_split");
   }
 
+  mutateProps(range) {
+    this.toxicity_resistance += range.generateNumber();
+    this.eating_type += range.generateNumber();
+    return this;
+  }
+
+  mutateNets(range) {
+    this.action_net.mutate(range);
+    this.move_net.mutate(range);
+    return this;
+  }
+
+  clone() {
+    return new Creature(
+      this.id, this.coordinates.clone(), this.satiety,
+      this.toxicity_resistance, this.eating_type, this.request_view_zone,
+      this.action_net.clone(), this.move_net.clone()
+    );
+  }
+
   _register_update() {
     this.timecode = Date.now();
   }
 
-  tick() {
+  tick(time) {
+    this.age += time;
     this._downGradeFatigue();
     this._checkForSplit();
     if (this.fatigue == 0)
@@ -99,9 +124,16 @@ class Creature {
       this.dispatchEvent("wanna_eat", this.coordinates);
       return;
     }
+
     var type_diff = Math.abs(this.eating_type - cell.food_type);
     var amount = Math.min(cell.food_amount, 1);
-    var effect = (Math.exp(type_diff) - 1) / (1.7 * this.FOOD_VARIETY) * amount;
+    var age_modificator = Math.pow((1 - this.age / this.MAX_AGE), 1 / 2);
+    if (this.age >= this.MAX_AGE)
+      age_modificator = 0;
+    if (isNaN(age_modificator))
+      debugger;
+    var effect = (Math.exp(type_diff) - 1) / (1.7 * this.FOOD_VARIETY) * amount * age_modificator * this.FOOD_MULTIPLITER;
+    //console.log(`food lost: ${amount - effect}`);
 
     this.satiety = Math.min(this.satiety + effect, 1);
     cell.food_amount -= amount;

@@ -9,6 +9,8 @@ class SimMaster {
     this.sim_speed = sim_speed;
     this.last_tick_duration = 0;
     this.ticks_counter = 0;
+    this.launch_time = Date.now();
+    this.sim_time = 0;
 
     this.lastTimecode = null
     this.simulationTimeout = null;
@@ -22,6 +24,7 @@ class SimMaster {
 
   startSimulation() {
     this.continueSimulation();
+    this.launch_time = Date.now();
   }
 
   continueSimulation() {
@@ -36,8 +39,14 @@ class SimMaster {
   simulationTick() {
     var nowTime = Date.now();
     var timeDelta = (nowTime - this.lastTimecode) * this.sim_speed;
+    this.sim_time += timeDelta;
 
-    console.log(`---------- Tick #${this.ticks_counter++} dur: ${this.last_tick_duration}ms ----------`);
+    console.log(`--- Tick #${this.ticks_counter++} dur: ${this.last_tick_duration}ms ---`);
+    console.log(`real duration: ${Math.round((Date.now() - this.launch_time) / 1000)}secs`)
+    console.log(`sim duration: ${Math.floor(this.sim_time / 1000)}sec`)
+    console.log(`maximal age: ${Math.floor(this.creatures_controller.maximal_age / 1000)}secs`)
+    console.log(`maximal generation: ${this.creatures_controller.maximal_generation}`)
+    console.log(`latest creature id: #${this.creatures_controller.creatures_counter}`)
 
     this.map_controller.tick(timeDelta);
 

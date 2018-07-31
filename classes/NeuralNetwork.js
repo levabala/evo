@@ -25,6 +25,14 @@ class NeuralNetwork {
     return `input_weights: ${this.input_weights}\noutput_weights: ${this.output_weights}\nhidden_layer: ${this.hidden_layer}\ninput_fun: ${this.input_fun}\noutput_fun: ${this.output_fun}`;
   }
 
+  clone() {
+    let cloned_net = new NeuralNetwork(
+      clone2dArr(this.input_weights), clone2dArr(this.output_weights),
+      this.hidden_layer.clone(), this.input_fun, this.output_fun
+    );
+    return cloned_net;
+  }
+
   mutate(range, mutate_hidden = true) {
     for (var i in this.input_weights)
       for (var i2 in this.input_weights[i])

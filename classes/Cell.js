@@ -8,7 +8,7 @@ class Cell {
     this.fertility = fertility;
     this.detoxification_rate = detoxification_rate;
     this.toxicity = toxicity;
-    this.walking_creatures = [];
+    this.walking_creatures = {};
 
     //constants
     this.MAX_FOOD_AMOUNT = 10;

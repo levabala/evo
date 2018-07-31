@@ -103,7 +103,7 @@ class VisualizerSVG {
   }
 
   _getCreatureSize(creature) {
-    return creature.satiety * 0.9;
+    return creature.satiety * 0.7;
   }
 
   _update_creatures() {
