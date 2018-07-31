@@ -1,16 +1,37 @@
 class VisualizerSVG {
   constructor(div, map_contoller, creatures_controller) {
+    Reactor.apply(this, []);
+
     this.div = div;
     this.draw = SVG(div).size("95%", "95%");
     this.main_nest = this.draw.nested();
     this.main_group = this.main_nest.group();
     this.map_contoller = map_contoller;
-    this.creatures_controller = creatures_controller;
+    this.creatures_controller =
+      creatures_controller
+        .addEventListener(
+          creatures_controller.NEW_CREATURE_EVENT,
+          this._addCreature.bind(this)
+        )
+        .addEventListener(
+          creatures_controller.DEAD_CREATURE_EVENT,
+          this._removeCreature.bind(this)
+        );
     this.map = map_contoller.map;
+    this.creatures_drawings = {}; //id - drawing
+    this.cells_drawings = [];
+
+    //constants
+    this.CELL_SIZE = 1; //no effect nowday 
 
     this._drawBackground();
+    this._createCells();
     this._drawNet();
     setTimeout(() => this.auto_scale(), 100);
+
+    //start redrawing cycle
+    setInterval(this._update_creatures.bind(this), 25);
+    setInterval(this._update_cells.bind(this), 100);
   }
 
   auto_scale() {
@@ -22,27 +43,100 @@ class VisualizerSVG {
     this.main_group.matrix(no_translate_matrix);
   }
 
+  _createCells() {
+    let cells = [];
+    for (var x = 0; x < this.map.width; x++) {
+      cells.push([]);
+      for (var y = 0; y < this.map.height; y++) {
+        let cell = this.map.cells[x][y];
+        let color = this._generateCellColor(cell);
+        cells[x][y] =
+          this.main_group.rect(1, 1)
+            .move(x, y)
+            .fill(color);
+      }
+    }
+    this.cells_drawings = cells;
+  }
+
+  _generateCellColor(cell) {
+    let hue = Math.round(cell.food_type * 360);
+    let sat = 20;
+    let light = Math.round(cell.food_amount * 2);
+    let color = `hsl(${hue}, ${sat}%, ${light}%)`;
+    return color;
+  }
+
+  _generateCreatureColor(creature) {
+    let hue = Math.round(creature.eating_type * 360);
+    let sat = 50;
+    let light = Math.round(Math.max(creature.satiety, 0.5) * 100);
+    let color = `hsl(${hue}, ${sat}%, ${light}%)`;
+    return color;
+  }
+
   _resetMatrixTranslate(matrix) {
     var map = [1, 1, 1, 1, 0, 0];
     return matrix.map((item, i, array) => item * map[i]);
   }
 
+  _addCreature(creature) {
+    let size = this._getCreatureSize(creature);
+    this.creatures_drawings[creature.id] =
+      this.main_group.rect(size, size)
+        .cx(creature.coordinates.x + 0.5)
+        .cy(creature.coordinates.y + 0.5)
+        .fill(this._generateCreatureColor(creature));
+  }
+
+  _removeCreature(creature) {
+    this.creatures_drawings[creature.id].remove();
+    delete this.creatures_drawings[creature.id];
+  }
+
   _calcScale() {
     let jq_div = $(this.div);
     return {
-      sx: jq_div.width() / this.map.width,
-      sy: jq_div.height() / this.map.height,
+      sx: jq_div.width() / (this.map.width + 3),
+      sy: jq_div.height() / (this.map.height + 3),
     }
+  }
+
+  _getCreatureSize(creature) {
+    return creature.satiety * 0.9;
+  }
+
+  _update_creatures() {
+    for (let entrie of Object.entries(this.creatures_drawings)) {
+      let id = entrie[0];
+      let drawing = entrie[1];
+      let creature = this.creatures_controller.creatures[id];
+      let size = this._getCreatureSize(creature);
+
+      //positioning
+      drawing
+        .cx(creature.coordinates.x + 0.5)
+        .cy(creature.coordinates.y + 0.5);
+
+      //sizing
+      drawing.width(size).height(size);
+
+      //color
+      //TODO: color based on eating_type
+    }
+  }
+
+  _update_cells() {
+    for (var x = 0; x < this.map.width; x++)
+      for (var y = 0; y < this.map.height; y++) {
+        let cell = this.map.cells[x][y];
+        let new_color = this._generateCellColor(cell);
+        this.cells_drawings[x][y].fill(new_color);
+      }
   }
 
   _drawBackground() {
     this.main_group.clear();
-    /*let background_rect = this.main_group.rect().size(
-      this.map.width,
-      this.map.height,
-    ).move(this.map.width,
-      this.map.height).fill({ color: "#FFFFFF", opacity: 0.1 });*/
-    //let rect2 = this.main_group.rect(100, 100).fill("none").back();
   }
 
   _drawNet() {

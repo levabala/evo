@@ -12,6 +12,15 @@ class Range {
     return value;
   }
 
+  isIn(value, include = false) {
+    if (
+      include && (this.from > value || this.to < value) ||
+      !include && (this.from >= value || this.to <= value))
+      return false;
+    else
+      return true;
+  }
+
   generateNumber() {
     return Math.random() * (this.to - this.from) + this.from;
   }
@@ -27,7 +36,7 @@ class P {
   }
 
   move(dx, dy) {
-    this.x += x;
+    this.x += dx;
     this.y += dy;
     return this;
   }
@@ -39,6 +48,14 @@ class P {
   }
 
   clone() {
-    new P(this.x, this.y);
+    return new P(this.x, this.y);
+  }
+
+  inRange(x_range, y_range, include = true) {
+    return x_range.isIn(this.x, include) && y_range.isIn(this.y, include);
+  }
+
+  toString() {
+    return this.x + ":" + this.y;
   }
 }

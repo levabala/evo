@@ -7,6 +7,8 @@ class SimMaster {
     this.map_controller = map_controller;
     this.tick_interval = tick_interval;
     this.sim_speed = sim_speed;
+    this.last_tick_duration = 0;
+    this.ticks_counter = 0;
 
     this.lastTimecode = null
     this.simulationTimeout = null;
@@ -33,7 +35,9 @@ class SimMaster {
 
   simulationTick() {
     var nowTime = Date.now();
-    var timeDelta = nowTime - this.lastTimecode;
+    var timeDelta = (nowTime - this.lastTimecode) * this.sim_speed;
+
+    console.log(`---------- Tick #${this.ticks_counter++} dur: ${this.last_tick_duration}ms ----------`);
 
     this.map_controller.tick(timeDelta);
 
@@ -41,5 +45,8 @@ class SimMaster {
 
     var nextTickDelay = Math.max(this.tick_interval - (Date.now() - nowTime), 0);
     this.simulationTimeout = setTimeout(this.simulationTick.bind(this), nextTickDelay);
+
+    this.lastTimecode = nowTime;
+    this.last_tick_duration = Date.now() - nowTime;
   }
 }

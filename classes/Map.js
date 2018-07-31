@@ -1,5 +1,5 @@
 class SimMap {
-  constructor(width, height, fertility_base = 0.2, fertility_range = 0.19) {
+  constructor(width, height, fertility_base = 0.0005, fertility_range = 0.0002) {
     //add reactor
     Reactor.apply(this, []);
 
@@ -10,8 +10,8 @@ class SimMap {
     this.cells = this._generateMap();
 
     //constants
-    this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width);
-    this.VERTICAL_AXIS_RANGE = new Range(0, this.height);
+    this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
+    this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
   }
 
   _generateMap() {

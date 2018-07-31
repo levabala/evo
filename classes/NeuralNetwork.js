@@ -6,7 +6,7 @@ class NeuralNetwork {
     this.input_fun = input_fun;
     this.output_fun = output_fun;
 
-    this._debug = true;
+    this._debug = false;
 
     if (random) {
       for (var i in this.input_weights)
@@ -16,10 +16,27 @@ class NeuralNetwork {
         for (var i2 in this.output_weights[i])
           this.output_weights[i][i2] = Math.round((Math.random() - 0.5) * 20) / 10;
     }
+
+    //constants
+    this.MAX_WEIGHT = 10; //TODO: apply it
   }
 
   toString() {
     return `input_weights: ${this.input_weights}\noutput_weights: ${this.output_weights}\nhidden_layer: ${this.hidden_layer}\ninput_fun: ${this.input_fun}\noutput_fun: ${this.output_fun}`;
+  }
+
+  mutate(range, mutate_hidden = true) {
+    for (var i in this.input_weights)
+      for (var i2 in this.input_weights[i])
+        this.input_weights[i][i2] += range.generateNumber();
+    for (var i in this.output_weights)
+      for (var i2 in this.output_weights[i])
+        this.output_weights[i][i2] += range.generateNumber();
+
+    if (mutate_hidden)
+      this.hidden_layer.mutate(range);
+
+    return this;
   }
 
   calc(input) {
@@ -35,7 +52,7 @@ class NeuralNetwork {
       for (var w in this.input_weights[i]) {
         var weight = this.input_weights[i][w];
         var value = this.input_fun(input[i]) * weight;
-        hidden_input[i] += value;
+        hidden_input[w] += value;
       }
 
     if (this._debug)
