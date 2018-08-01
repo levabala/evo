@@ -3,10 +3,13 @@ class MapController {
     this.map = map;
   }
 
-  tick(time) {
+  tick(time, timecode) {
     for (var x = 0; x < this.map.width; x++)
-      for (var y = 0; y < this.map.height; y++)
-        this.map.cells[x][y].tick(time);
+      for (var y = 0; y < this.map.height; y++) {
+        let cell = this.map.cells[x][y];
+        cell.last_update_timecode = timecode;
+        cell.tick(time);
+      }
   }
 
   reset() {

@@ -22,10 +22,28 @@ class Creature {
 
     //constants
     this.FOOD_VARIETY = -0.432; //less than 1 -> bad, more than 1 -> good
+    this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
     this.SPLIT_SATIETY_NEEDED = 0.8;
     this.FOOD_MULTIPLITER = 1;
-    this.MAX_AGE = 50 * 1000; //seconds
+    this.MAX_AGE = 50 * 1000; //seconds    
+
+
+
+
+    //TODO: 
+    /*
+    * выполнить в creature_controller.tick несколько раз creature.tick
+    * 
+    * 
+    * 
+    * 
+    * 
+    * 
+    * 
+    * 
+    * 
+     */
 
     //events
     this.registerEvent("wanna_eat");
@@ -61,11 +79,14 @@ class Creature {
     this.age += time;
     this._downGradeFatigue(time);
     let actions_done = 0;
-    while (this.fatigue <= 0) {
+    /*while (this.fatigue <= 0) {
       this._makeAction();
       this._checkForSplit();
       actions_done++;
-    }
+    }*/
+    this._makeAction();
+    this._checkForSplit();
+    this.fatigue = 0;
   }
 
   _downGradeFatigue(time) {
@@ -135,7 +156,7 @@ class Creature {
     }
 
     var type_diff = Math.abs(this.eating_type - cell.food_type);
-    var amount = Math.min(cell.food_amount, 1);
+    var amount = Math.min(cell.food_amount, this.FOOD_PER_ACTION);
     var age_modificator = Math.pow((1 - this.age / this.MAX_AGE), 1 / 2);
     if (this.age >= this.MAX_AGE)
       age_modificator = 0;

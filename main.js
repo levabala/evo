@@ -1,8 +1,8 @@
 var div_map = document.getElementById("div_drawing");
 var div_net = document.getElementById("div_net");
-var size = 150;
-var coeff_x = 25 / 55;
-var coeff_y = 30 / 55;
+var size = 70;
+var coeff_x = 4 / 8;
+var coeff_y = 4 / 8;
 //var map = new SimMap(100, 50);
 var map = new SimMap(Math.floor(size * coeff_x), Math.floor(size * coeff_y));
 var map_controller = new MapController(map);

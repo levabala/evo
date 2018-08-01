@@ -8,6 +8,8 @@ class CreaturesController {
     this.creatures = {};
     this.maximal_generation = 0;
     this.maximal_age = 0;
+    this.last_tick_timecode = Date.now();
+    this.sim_speed = 1;
 
     //constants    
     this.MINIMAL_CREATURES_DENSITY = 0.03//0.005; //creatures per cell
@@ -18,32 +20,44 @@ class CreaturesController {
     this.DEAD_CREATURE_EVENT = "deawd_creature";
     this.MOVE_CREATURE_EVENT = "move_creature";
     this.MOVE_CREATURES_EVENT = "move_creatures";
+    this.PROCESS_CELL_EVENT = "process_cell";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
     this.CREATURE_SATIETY_DOWNGRADE = 0.0003;
-    this.CHILD_NET_MUTATE_RANGE = new Range(-0.00001, 0.0001);
-    this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.0005, 0.0005);
+    this.CHILD_NET_MUTATE_RANGE = new Range(-0.001, 0.001);
+    this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.005, 0.005);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
+    this.NEW_CREATURES_PER_SECS = 1;
 
     //other
     this._debug = false;
+    this._time_buffer_1 = 0;
 
     //events    
     this.registerEvent(this.NEW_CREATURE_EVENT);
     this.registerEvent(this.DEAD_CREATURE_EVENT);
     this.registerEvent(this.MOVE_CREATURE_EVENT);
     this.registerEvent(this.MOVE_CREATURES_EVENT);
+    this.registerEvent(this.PROCESS_CELL_EVENT);
   }
 
-  tick(time) {
+  tick(time, timecode, sim_speed) {
+    this.last_tick_timecode = timecode;
+    this.sim_speed = sim_speed;
+
     //if is's too little of creatures, then add new one
     const MAX_CREATURE_PER_TICK_ADDED = 50;
     let added = 0;
-    this._generateAndAddCreature();
+    this._time_buffer_1 += time;
+    let new_creatures_count = Math.floor(((time + this._time_buffer_1) / 1000) * this.NEW_CREATURES_PER_SECS);
+    this._time_buffer_1 = Math.max(this._time_buffer_1 - new_creatures_count * 1000, 0);
+    for (var i = 0; i < new_creatures_count; i++)
+      this._generateAndAddCreature();
     while (this._checkCreaturesLimit() && added++ < MAX_CREATURE_PER_TICK_ADDED) { }
 
     this.maximal_generation = 0;
     this.maximal_age = 0;
+
     //all creatures tick
     for (var creature of Object.values(this.creatures)) {
       creature.tick(time);
@@ -196,7 +210,9 @@ class CreaturesController {
       .addEventListener(
         "wanna_eat",
         function() {
-          creature.eat(this.map.cells[creature.coordinates.x][creature.coordinates.y]);
+          let cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+          cell.process(Date.now(), this.sim_speed);
+          creature.eat(cell);
         }.bind(this))
       .addEventListener(
         "wanna_split",
