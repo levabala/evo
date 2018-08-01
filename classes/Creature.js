@@ -21,10 +21,10 @@ class Creature {
     this.move_net = move_net;
 
     //constants
-    this.FOOD_VARIETY = 4; //less than 1 -> bad, more than 1 -> good
-    this.FATIGUE_DONWGRADE = 0.2;
-    this.SPLIT_SATIETY_NEEDED = 0.95;
-    this.FOOD_MULTIPLITER = 2;
+    this.FOOD_VARIETY = -0.432; //less than 1 -> bad, more than 1 -> good
+    this.FATIGUE_DONWGRADE = 0.005;
+    this.SPLIT_SATIETY_NEEDED = 0.8;
+    this.FOOD_MULTIPLITER = 1;
     this.MAX_AGE = 50 * 1000; //seconds
 
     //events
@@ -59,14 +59,17 @@ class Creature {
 
   tick(time) {
     this.age += time;
-    this._downGradeFatigue();
-    this._checkForSplit();
-    if (this.fatigue == 0)
+    this._downGradeFatigue(time);
+    let actions_done = 0;
+    while (this.fatigue <= 0) {
       this._makeAction();
+      this._checkForSplit();
+      actions_done++;
+    }
   }
 
-  _downGradeFatigue() {
-    this.fatigue = Math.max(this.fatigue - this.FATIGUE_DONWGRADE, 0);
+  _downGradeFatigue(time) {
+    this.fatigue = this.fatigue - this.FATIGUE_DONWGRADE * time;
   }
 
   _checkForSplit() {
@@ -87,7 +90,7 @@ class Creature {
     ];
 
     action(this);
-    this.fatigue = 1;
+    this.fatigue += 1;
   }
 
   split() {
@@ -111,10 +114,16 @@ class Creature {
   _generateNetInput() {
     let view_zone = this.request_view_zone(this.coordinates);
     return [
-      view_zone.right ? view_zone.right.food_type : -1, view_zone.bottom ? view_zone.bottom.food_type : -1,
-      view_zone.left ? view_zone.left.food_type : -1, view_zone.top ? view_zone.top.food_type : -1,
-      view_zone.right ? view_zone.right.food_amount : -1, view_zone.bottom ? view_zone.bottom.food_amount : -1,
-      view_zone.left ? view_zone.left.food_amount : -1, view_zone.top ? view_zone.top.food_amount : -1,
+      view_zone.right ? Math.abs(this.eating_type - view_zone.right.food_type) : -1,
+      view_zone.bottom ? Math.abs(this.eating_type - view_zone.bottom.food_type) : -1,
+      view_zone.left ? Math.abs(this.eating_type - view_zone.left.food_type) : -1,
+      view_zone.top ? Math.abs(this.eating_type - view_zone.top.food_type) : -1,
+      view_zone.right ? view_zone.right.food_amount : -1,
+      view_zone.bottom ? view_zone.bottom.food_amount : -1,
+      view_zone.left ? view_zone.left.food_amount : -1,
+      view_zone.top ? view_zone.top.food_amount : -1,
+      Math.abs(this.eating_type - view_zone.center.food_type),
+      view_zone.center.food_amount,
       this.satiety
     ];
   }
@@ -130,9 +139,22 @@ class Creature {
     var age_modificator = Math.pow((1 - this.age / this.MAX_AGE), 1 / 2);
     if (this.age >= this.MAX_AGE)
       age_modificator = 0;
-    if (isNaN(age_modificator))
+    //var effect = (Math.exp(type_diff) - 1) / (1.7 * this.FOOD_VARIETY) * amount * age_modificator * this.FOOD_MULTIPLITER;
+    let type_diff_coeff = 1;
+    if (type_diff < 0.5) {
+      type_diff_coeff = Math.pow(1 - type_diff, 1 / (2 * this.FOOD_VARIETY + 1));
+    }
+    else {
+      type_diff_coeff = -Math.pow(type_diff, 1 / (2 * this.FOOD_VARIETY + 1));
+    }
+    //console.log(Math.round(type_diff_coeff * 100) / 100, Math.round(amount * 100) / 100, Math.round(age_modificator * 100) / 100)
+    var effect =
+      type_diff_coeff
+      * amount
+      * age_modificator
+      * this.FOOD_MULTIPLITER;
+    if (isNaN(type_diff_coeff))
       debugger;
-    var effect = (Math.exp(type_diff) - 1) / (1.7 * this.FOOD_VARIETY) * amount * age_modificator * this.FOOD_MULTIPLITER;
     //console.log(`food lost: ${amount - effect}`);
 
     this.satiety = Math.min(this.satiety + effect, 1);

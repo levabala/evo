@@ -1,7 +1,7 @@
 class Cell {
   constructor(
-    coordinates, fertility = 0.1, detoxification_rate = 0.1, toxicity = 0,
-    food_type = Math.random(), food_amount = 0) {
+    coordinates, fertility = 0.1, food_type = Math.random(), toxicity = 0,
+    detoxification_rate = 0.1, food_amount = 0) {
     this.coordinates = coordinates;
     this.food_type = food_type;
     this.food_amount = food_amount;
@@ -11,7 +11,7 @@ class Cell {
     this.walking_creatures = {};
 
     //constants
-    this.MAX_FOOD_AMOUNT = 10;
+    this.MAX_FOOD_AMOUNT = 0.5;
   }
 
   tick(time) {

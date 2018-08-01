@@ -23,7 +23,8 @@ class SimMaster {
   }
 
   startSimulation() {
-    this.continueSimulation();
+    this.lastTimecode = Date.now() - 30000 / this.sim_speed;
+    this.simulationTick();
     this.launch_time = Date.now();
   }
 

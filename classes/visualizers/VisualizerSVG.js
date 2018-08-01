@@ -62,7 +62,7 @@ class VisualizerSVG {
   _generateCellColor(cell) {
     let hue = Math.round(cell.food_type * 360);
     let sat = 20;
-    let light = Math.round(cell.food_amount * 2);
+    let light = Math.round(cell.food_amount / cell.MAX_FOOD_AMOUNT * 20);
     let color = `hsl(${hue}, ${sat}%, ${light}%)`;
     return color;
   }
@@ -97,8 +97,8 @@ class VisualizerSVG {
   _calcScale() {
     let jq_div = $(this.div);
     return {
-      sx: jq_div.width() / (this.map.width + 3),
-      sy: jq_div.height() / (this.map.height + 3),
+      sx: jq_div.width() / (this.map.width + 5),
+      sy: jq_div.height() / (this.map.height + 5),
     }
   }
 

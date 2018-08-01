@@ -10,7 +10,7 @@ class CreaturesController {
     this.maximal_age = 0;
 
     //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.1//0.005; //creatures per cell
+    this.MINIMAL_CREATURES_DENSITY = 0.03//0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
     this.AFTER_SPLIT_SATIETY = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
@@ -20,7 +20,7 @@ class CreaturesController {
     this.MOVE_CREATURES_EVENT = "move_creatures";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.005;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.0003;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.00001, 0.0001);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.0005, 0.0005);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
@@ -37,15 +37,17 @@ class CreaturesController {
 
   tick(time) {
     //if is's too little of creatures, then add new one
+    const MAX_CREATURE_PER_TICK_ADDED = 50;
     let added = 0;
-    while (this._checkCreaturesLimit() && added++ < 10) { }
+    this._generateAndAddCreature();
+    while (this._checkCreaturesLimit() && added++ < MAX_CREATURE_PER_TICK_ADDED) { }
 
     this.maximal_generation = 0;
     this.maximal_age = 0;
     //all creatures tick
     for (var creature of Object.values(this.creatures)) {
       creature.tick(time);
-      creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE;
+      creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
       if (isNaN(creature.satiety))
         debugger;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
@@ -63,10 +65,10 @@ class CreaturesController {
 
   viewZoneGetter(pos) {
     let view_zone = {
-      left: this.map.HORIZONTAL_AXIS_RANGE.isIn(pos.x - 1) ? this.map.cells[pos.x - 1][pos.y] : null,
-      right: this.map.HORIZONTAL_AXIS_RANGE.isIn(pos.x + 1) ? this.map.cells[pos.x + 1][pos.y] : null,
-      top: this.map.VERTICAL_AXIS_RANGE.isIn(pos.y - 1) ? this.map.cells[pos.x][pos.y - 1] : null,
-      bottom: this.map.VERTICAL_AXIS_RANGE.isIn(pos.y + 1) ? this.map.cells[pos.x][pos.y + 1] : null,
+      left: this.map.cellAtPoint(pos.move(-1, 0)),
+      right: this.map.cellAtPoint(pos.move(1, 0)),
+      top: this.map.cellAtPoint(pos.move(0, -1)),
+      bottom: this.map.cellAtPoint(pos.move(0, 1)),
       center: this.map.cells[pos.x][pos.y]
     };
 
@@ -88,7 +90,7 @@ class CreaturesController {
         if (!pos.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE))
           return false;
         let cell_creatures_count = Object.keys(
-          this.map.cellAtPoint.bind(this)(pos)
+          this.map.cellAtPoint.bind(map)(pos)
             .walking_creatures).length;
         return cell_creatures_count == 0;
       }.bind(this)
@@ -144,8 +146,8 @@ class CreaturesController {
 
   _removeCreature(creature) {
     this.dispatchEvent(this.DEAD_CREATURE_EVENT, creature);
-    delete this.creatures[creature.id];
     delete this.map.cells[creature.coordinates.x][creature.coordinates.y].walking_creatures[creature.id];
+    delete this.creatures[creature.id];
   }
 
   _generateAndAddCreature() {
@@ -204,26 +206,30 @@ class CreaturesController {
   }
 
   _creatureWannaMove(creature, new_position) {
-    if (new_position.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE)) {
-      //remove from last cell
-      let previous_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
-      delete previous_cell[creature.id];
+    if (new_position.x > this.map.HORIZONTAL_AXIS_RANGE.to)
+      new_position.x = this.map.HORIZONTAL_AXIS_RANGE.from;
+    else if (new_position.x < this.map.HORIZONTAL_AXIS_RANGE.from)
+      new_position.x = this.map.HORIZONTAL_AXIS_RANGE.to;
+    if (new_position.y > this.map.VERTICAL_AXIS_RANGE.to)
+      new_position.y = this.map.VERTICAL_AXIS_RANGE.from;
+    else if (new_position.y < this.map.VERTICAL_AXIS_RANGE.from)
+      new_position.y = this.map.VERTICAL_AXIS_RANGE.to;
 
-      //update coordinates
-      creature.coordinates = new_position;
+    //remove from last cell
+    let previous_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+    delete previous_cell.walking_creatures[creature.id];
 
-      //add to new one
-      let cell = this.map.cells[new_position.x][new_position.y];
-      cell.walking_creatures[creature.id] = creature;
+    //update coordinates
+    creature.coordinates = new_position;
 
-      //notify controller&visualizer
-      this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);
-      if (this._debug)
-        creature.say("moved to " + new_position);
-    }
-    else
-      if (this._debug)
-        creature.say("can't move")
+    //add to new one
+    let cell = this.map.cells[new_position.x][new_position.y];
+    cell.walking_creatures[creature.id] = creature;
+
+    //notify controller&visualizer
+    this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);
+    if (this._debug)
+      creature.say("moved to " + new_position);
   }
 
   _generateCreatures(x_range, y_range, amount) {
@@ -234,11 +240,11 @@ class CreaturesController {
   }
 
   _generateActionNet() {
-    //input: viewzone(4 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(5 cells -> x2(food_type + food_amount)) + satiety
     //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
-      [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
+      [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
       [[v, v], [v, v], [v, v]], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
@@ -249,11 +255,11 @@ class CreaturesController {
   }
 
   _generateMoveNet() {
-    //input: viewzone(4 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(5 cells -> x2(food_type + food_amount)) + satiety
     //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
-      [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
+      [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
       [[v, v, v, v], [v, v, v, v], [v, v, v, v]], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
