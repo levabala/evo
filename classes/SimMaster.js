@@ -14,6 +14,9 @@ class SimMaster {
 
     this.lastTimecode = null
     this.simulationTimeout = null;
+
+    //constants
+    this.MAX_TICK_SIM_TIME = 10000;
   }
 
   resetSimulation() {
@@ -39,7 +42,9 @@ class SimMaster {
 
   simulationTick() {
     var nowTime = Date.now();
+    //this.sim_speed = Math.min(this.sim_speed, this.tick_interval);
     var timeDelta = (nowTime - this.lastTimecode) * this.sim_speed;
+    timeDelta = Math.min(timeDelta, this.MAX_TICK_SIM_TIME);
     this.sim_time += timeDelta;
 
     console.log(`--- Tick #${this.ticks_counter++} dur: ${this.last_tick_duration}ms ---`);

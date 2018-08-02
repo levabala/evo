@@ -23,6 +23,9 @@ class VisualizerSVG {
 
     //constants
     this.CELL_SIZE = 1; //no effect nowday 
+    this.UPDATE_CELLS_INTERVAL = 100;
+    this.UPDATE_CREATURES_INTERVAL = 30;
+    this.SIZE_REDRAW_TIGGER = 0.01;
 
     this._drawBackground();
     this._createCells();
@@ -30,8 +33,8 @@ class VisualizerSVG {
     setTimeout(() => this.auto_scale(), 100);
 
     //start redrawing cycle
-    setInterval(this._update_creatures.bind(this), 25);
-    setInterval(this._update_cells.bind(this), 100);
+    this._update_creatures();
+    this._update_cells();
   }
 
   auto_scale() {
@@ -113,17 +116,24 @@ class VisualizerSVG {
       let creature = this.creatures_controller.creatures[id];
       let size = this._getCreatureSize(creature);
 
-      //positioning
-      drawing
-        .cx(creature.coordinates.x + 0.5)
-        .cy(creature.coordinates.y + 0.5);
+      let size_change = Math.abs(size - drawing.width()) >= this.SIZE_REDRAW_TIGGER;
+
+      //positioning  
+      if (
+        size_change ||
+        Math.round(drawing.cx()) != creature.coordinates.x + 1 ||
+        Math.round(drawing.cy()) != creature.coordinates.y + 1
+      )
+        drawing
+          .cx(creature.coordinates.x + 0.5)
+          .cy(creature.coordinates.y + 0.5);
 
       //sizing
-      drawing.width(size).height(size);
-
-      //color
-      //TODO: color based on eating_type
+      if (size_change)
+        drawing.width(size).height(size);
     }
+
+    setTimeout(this._update_creatures.bind(this), this.UPDATE_CREATURES_INTERVAL);
   }
 
   _update_cells() {
@@ -133,6 +143,8 @@ class VisualizerSVG {
         let new_color = this._generateCellColor(cell);
         this.cells_drawings[x][y].fill(new_color);
       }
+
+    setTimeout(this._update_cells.bind(this), this.UPDATE_CELLS_INTERVAL);
   }
 
   _drawBackground() {

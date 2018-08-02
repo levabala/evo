@@ -21,7 +21,7 @@ class Creature {
     this.move_net = move_net;
 
     //constants
-    this.FOOD_VARIETY = -0.47; //less than 1 -> bad, more than 1 -> good
+    this.FOOD_VARIETY = -0.48; //less than 1 -> bad, more than 1 -> good
     this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
     this.SPLIT_SATIETY_NEEDED = 0.8;

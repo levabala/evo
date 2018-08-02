@@ -1,6 +1,6 @@
 var div_map = document.getElementById("div_drawing");
 var div_net = document.getElementById("div_net");
-var size = 200;
+var size = 100;
 var coeff_x = 4 / 8;
 var coeff_y = 4 / 8;
 //var map = new SimMap(100, 50);
