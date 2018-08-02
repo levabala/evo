@@ -51,7 +51,7 @@ class SimMaster {
 
     this.map_controller.tick(timeDelta, nowTime, this.sim_speed);
 
-    this.creatures_controller.tick(timeDelta, nowTime, this.sim_speed);
+    this.creatures_controller.tick(timeDelta, nowTime, this.tick_interval * this.sim_speed, this.sim_speed);
 
     var nextTickDelay = Math.max(this.tick_interval - (Date.now() - nowTime), 0);
     this.simulationTimeout = setTimeout(this.simulationTick.bind(this), nextTickDelay);

@@ -17,30 +17,13 @@ class Cell {
     this.MAX_FOOD_AMOUNT = 0.5;
   }
 
-  process(new_timecode, sim_speed) {
-    let delta_unscaled = new_timecode - this.last_update_timecode;
-    let delta = delta_unscaled * sim_speed;
-    this.processed_time += delta;
-    console.log(delta, delta_unscaled, this.processed_time, sim_speed);
+  update(timecode, sim_speed) {
+    let delta = (timecode - this.last_update_timecode) * sim_speed;
+    this.last_update_timecode = timecode;
+
     this._do_all_stuff(delta);
-    this.last_update_timecode = new_timecode;
-  }
 
-  tick(time) {
-    this.last_update_timecode = Date.now();
-
-    //console.log('r1:', time, this.processed_time)
-
-    let proc_t = Math.max(this.processed_time - time, 0);
-    time = Math.max(time - this.processed_time, 0);
-    this.processed_time = proc_t;
-
-    //console.log('r2:', time, this.processed_time)
-
-    if (time == 0)
-      return;
-
-    this._do_all_stuff(time);
+    return this;
   }
 
   _do_all_stuff(time) {
@@ -49,8 +32,9 @@ class Cell {
   }
 
   grow(time) {
+    //console.log(Math.round(this.fertility * time * 100) / 100);
     this.food_amount += this.fertility * time;
-    this.food_amount = Math.min(this.food_amount, this.MAX_FOOD_AMOUNT);
+    this.food_amount = Math.max(Math.min(this.food_amount, this.MAX_FOOD_AMOUNT), 0);
   }
 
   detoxificate(time) {

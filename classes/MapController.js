@@ -3,12 +3,11 @@ class MapController {
     this.map = map;
   }
 
-  tick(time, timecode) {
+  tick(time, timecode, sim_speed) {
     for (var x = 0; x < this.map.width; x++)
       for (var y = 0; y < this.map.height; y++) {
         let cell = this.map.cells[x][y];
-        cell.last_update_timecode = timecode;
-        cell.tick(time);
+        cell.update(timecode, sim_speed);
       }
   }
 

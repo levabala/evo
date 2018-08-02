@@ -21,29 +21,13 @@ class Creature {
     this.move_net = move_net;
 
     //constants
-    this.FOOD_VARIETY = -0.432; //less than 1 -> bad, more than 1 -> good
+    this.FOOD_VARIETY = -0.47; //less than 1 -> bad, more than 1 -> good
     this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
     this.SPLIT_SATIETY_NEEDED = 0.8;
     this.FOOD_MULTIPLITER = 1;
     this.MAX_AGE = 50 * 1000; //seconds    
-
-
-
-
-    //TODO: 
-    /*
-    * выполнить в creature_controller.tick несколько раз creature.tick
-    * 
-    * 
-    * 
-    * 
-    * 
-    * 
-    * 
-    * 
-    * 
-     */
+    this.ACTION_COST = 1;
 
     //events
     this.registerEvent("wanna_eat");
@@ -75,18 +59,23 @@ class Creature {
     this.timecode = Date.now();
   }
 
+  actionsToDoCount() {
+    return Math.floor(Math.max(-this.fatigue, 0) / this.ACTION_COST);
+  }
+
   tick(time) {
     this.age += time;
     this._downGradeFatigue(time);
-    let actions_done = 0;
-    /*while (this.fatigue <= 0) {
+    /*let actions_done = 0;
+    while (this.fatigue <= 0) {
       this._makeAction();
       this._checkForSplit();
       actions_done++;
     }*/
-    this._makeAction();
-    this._checkForSplit();
-    this.fatigue = 0;
+    if (this.fatigue <= 0) {
+      this._makeAction();
+      this._checkForSplit();
+    }
   }
 
   _downGradeFatigue(time) {
@@ -111,7 +100,7 @@ class Creature {
     ];
 
     action(this);
-    this.fatigue += 1;
+    this.fatigue += this.ACTION_COST;
   }
 
   split() {

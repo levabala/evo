@@ -23,7 +23,7 @@ class CreaturesController {
     this.PROCESS_CELL_EVENT = "process_cell";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.0003;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.0001;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.001, 0.001);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.005, 0.005);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
@@ -41,10 +41,26 @@ class CreaturesController {
     this.registerEvent(this.PROCESS_CELL_EVENT);
   }
 
-  tick(time, timecode, sim_speed) {
+  tick(time, timecode, tick_length, sim_speed) {
     this.last_tick_timecode = timecode;
     this.sim_speed = sim_speed;
 
+    let max_actions_count = Object.values(this.creatures).reduce(
+      (max_count, creature) => {
+        return Math.max(max_count, creature.actionsToDoCount());
+      }, 1
+    );
+
+    let time_per_tick = Math.floor(time / sim_speed / max_actions_count);
+    console.log(time, time_per_tick, max_actions_count)
+
+    for (let i = 0; i < max_actions_count; i++) {
+      this.last_tick_timecode += time_per_tick;
+      this._internal_tick(time_per_tick * sim_speed);
+    }
+  }
+
+  _internal_tick(time) {
     //if is's too little of creatures, then add new one
     const MAX_CREATURE_PER_TICK_ADDED = 50;
     let added = 0;
@@ -79,11 +95,11 @@ class CreaturesController {
 
   viewZoneGetter(pos) {
     let view_zone = {
-      left: this.map.cellAtPoint(pos.move(-1, 0)),
-      right: this.map.cellAtPoint(pos.move(1, 0)),
-      top: this.map.cellAtPoint(pos.move(0, -1)),
-      bottom: this.map.cellAtPoint(pos.move(0, 1)),
-      center: this.map.cells[pos.x][pos.y]
+      left: this.map.cellAtPoint(pos.move(-1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      right: this.map.cellAtPoint(pos.move(1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      top: this.map.cellAtPoint(pos.move(0, -1)).update(this.last_tick_timecode, this.sim_speed),
+      bottom: this.map.cellAtPoint(pos.move(0, 1)).update(this.last_tick_timecode, this.sim_speed),
+      center: this.map.cells[pos.x][pos.y].update(this.last_tick_timecode, this.sim_speed)
     };
 
     return view_zone;
@@ -200,6 +216,11 @@ class CreaturesController {
     return creature;
   }
 
+  _cratureWannaEat(creature) {
+    let cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+    creature.eat(cell.update(this.last_tick_timecode, this.sim_speed));
+  }
+
   _processNewCreature(creature) {
     creature
       .addEventListener(
@@ -210,9 +231,7 @@ class CreaturesController {
       .addEventListener(
         "wanna_eat",
         function() {
-          let cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
-          cell.process(Date.now(), this.sim_speed);
-          creature.eat(cell);
+          this._cratureWannaEat(creature);
         }.bind(this))
       .addEventListener(
         "wanna_split",
