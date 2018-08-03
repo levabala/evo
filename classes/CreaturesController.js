@@ -30,7 +30,7 @@ class CreaturesController {
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
-    this.NEW_CREATURE_FOOD_VARIETY = -0.43;
+    this.NEW_CREATURE_FOOD_VARIETY = -0.48;
     this.NEW_CREATURE_MAX_AGE = 50 * 1000;
 
     //other
