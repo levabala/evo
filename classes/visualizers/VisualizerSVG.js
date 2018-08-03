@@ -3,7 +3,7 @@ class VisualizerSVG {
     Reactor.apply(this, []);
 
     this.div = div;
-    this.draw = SVG(div).size("95%", "95%");
+    this.draw = SVG(div);
     this.main_nest = this.draw.nested();
     this.main_group = this.main_nest.group();
     this.map_contoller = map_contoller;
@@ -26,11 +26,15 @@ class VisualizerSVG {
     this.UPDATE_CELLS_INTERVAL = 100;
     this.UPDATE_CREATURES_INTERVAL = 30;
     this.SIZE_REDRAW_TIGGER = 0.01;
+    this.OFFSET = 10;
 
     this._drawBackground();
     this._createCells();
     this._drawNet();
-    setTimeout(() => this.auto_scale(), 100);
+    setTimeout(function() {
+      this.auto_scale()
+      setTimeout(this._resize_main_div.bind(this), 1000);
+    }.bind(this), 100);
 
     //start redrawing cycle
     this._update_creatures();
@@ -97,11 +101,20 @@ class VisualizerSVG {
     delete this.creatures_drawings[creature.id];
   }
 
+  _resize_main_div() {
+    let bbox = this.main_nest.bbox();
+    let width = bbox.width + this.OFFSET;
+    let height = bbox.height + this.OFFSET;
+    this.draw.size(width + "px", height + "px");
+  }
+
   _calcScale() {
     let jq_div = $(this.div);
+    let width = jq_div.width();
+    let height = jq_div.height()
     return {
-      sx: jq_div.width() / (this.map.width + 5),
-      sy: jq_div.height() / (this.map.height + 5),
+      sx: width / (this.map.width + 5),
+      sy: height / (this.map.height + 5),
     }
   }
 

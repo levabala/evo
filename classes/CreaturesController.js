@@ -6,6 +6,7 @@ class CreaturesController {
     this.map = map;
     this.creatures_counter = 0;
     this.creatures = {};
+    this.creatures_count = 0;
     this.maximal_generation = 0;
     this.maximal_age = 0;
     this.last_tick_timecode = Date.now();
@@ -62,7 +63,7 @@ class CreaturesController {
 
   _internal_tick(time) {
     //if is's too little of creatures, then add new one
-    const MAX_CREATURE_PER_TICK_ADDED = 50;
+    const MAX_CREATURE_PER_TICK_ADDED = 10;
     let added = 0;
     this._time_buffer_1 += time;
     let new_creatures_count = Math.floor(((time + this._time_buffer_1) / 1000) * this.NEW_CREATURES_PER_SECS);
@@ -75,7 +76,9 @@ class CreaturesController {
     this.maximal_age = 0;
 
     //all creatures tick
-    for (var creature of Object.values(this.creatures)) {
+    let creatures = Object.values(this.creatures);
+    this.creatures_count = creatures.length;
+    for (var creature of creatures) {
       creature.tick(time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
       if (isNaN(creature.satiety))

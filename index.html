@@ -5,7 +5,12 @@
   <script src="libs/svg.min.js"></script>
   <script src="libs/jquery.js"></script>
   <script src="libs/perlin_noize.js"></script>
+  <script src="libs/lodash.js"></script>
   <!-- libs end-->
+
+  <!-- my libs -->
+  <script src="../SimplePlot/simplePlot.js"></script>
+  <!-- my libs end -->
 
   <!-- scripts -->
   <script src="classes/Creature.js"></script>
@@ -14,6 +19,7 @@
   <script src="classes/MapController.js"></script>
   <script src="classes/SimVisualizer.js"></script>
   <script src="classes/SimMaster.js"></script>
+  <script src="classes/SimObserver.js"></script>
   <script src="classes/visualizers/VisualizerSVG.js"></script>
   <script src="classes/Cell.js"></script>
   <script src="classes/Actions.js"></script>
@@ -27,8 +33,13 @@
 
 <body style="background: black">
   <div id="div_drawing"></div>
-  <div id="div_net"></div>
+  <div id="div_graph" style="background: gray; position:absolute; bottom: 10px; top:700px; left: 10px; right: 10px"></div>
   <script src="main.js"></script>
+  <script>
+    //interface script
+    var div_graph = document.getElementById("div_graph");
+
+  </script>
 </body>
 
 </html>
