@@ -1,7 +1,8 @@
 class Creature {
   constructor(
     id, coordinates, satiety, toxicity_resistance,
-    eating_type, request_view_zone, action_net, move_net) {
+    eating_type, request_view_zone,
+    action_net, move_net, food_variety = -0.483, max_age = 50 * 1000) {
 
     Reactor.apply(this, []);
 
@@ -15,18 +16,18 @@ class Creature {
     this.fatigue = 1;
     this.timecode = Date.now();
     this.generation = 1;
+    this.food_variety = food_variety;
+    this.max_age = max_age;
 
     //neural networks
     this.action_net = action_net;
     this.move_net = move_net;
 
-    //constants
-    this.FOOD_VARIETY = -0.48; //less than 1 -> bad, more than 1 -> good
+    //constants    
     this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
     this.SPLIT_SATIETY_NEEDED = 0.8;
     this.FOOD_MULTIPLITER = 1;
-    this.MAX_AGE = 50 * 1000; //seconds    
     this.ACTION_COST = 1;
 
     //events
@@ -146,16 +147,16 @@ class Creature {
 
     var type_diff = Math.abs(this.eating_type - cell.food_type);
     var amount = Math.min(cell.food_amount, this.FOOD_PER_ACTION);
-    var age_modificator = Math.pow((1 - this.age / this.MAX_AGE), 1 / 2);
-    if (this.age >= this.MAX_AGE)
+    var age_modificator = Math.pow((1 - this.age / this.max_age), 1 / 2);
+    if (this.age >= this.max_age)
       age_modificator = 0;
-    //var effect = (Math.exp(type_diff) - 1) / (1.7 * this.FOOD_VARIETY) * amount * age_modificator * this.FOOD_MULTIPLITER;
+    //var effect = (Math.exp(type_diff) - 1) / (1.7 * this.food_variety) * amount * age_modificator * this.FOOD_MULTIPLITER;
     let type_diff_coeff = 1;
     if (type_diff < 0.5) {
-      type_diff_coeff = Math.pow(1 - type_diff, 1 / (2 * this.FOOD_VARIETY + 1));
+      type_diff_coeff = Math.pow(1 - type_diff, 1 / (2 * this.food_variety + 1));
     }
     else {
-      type_diff_coeff = -Math.pow(type_diff, 1 / (2 * this.FOOD_VARIETY + 1));
+      type_diff_coeff = -Math.pow(type_diff, 1 / (2 * this.food_variety + 1));
     }
     //console.log(Math.round(type_diff_coeff * 100) / 100, Math.round(amount * 100) / 100, Math.round(age_modificator * 100) / 100)
     var effect =

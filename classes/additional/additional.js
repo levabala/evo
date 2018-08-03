@@ -69,3 +69,9 @@ function clone2dArr(array) {
     return arr.slice();
   });
 }
+
+function creatureWorkerURL(worker_function) {
+  return URL.createObjectURL(
+    new Blob(["(" + worker_function.toString() + ")()"], { type: 'text/javascript' })
+  );
+}

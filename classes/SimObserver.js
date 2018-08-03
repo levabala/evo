@@ -4,7 +4,8 @@ class SimObserver {
 
     this.sim_master = sim_master;
     this.logs = {
-      creatures_count: []
+      creatures_count: [],
+      max_generation: [],
     }
 
     //constants
@@ -18,6 +19,7 @@ class SimObserver {
 
   _updateLogs() {
     this.logs.creatures_count.push(this.sim_master.creatures_controller.creatures_count);
+    this.logs.max_generation.push(this.sim_master.creatures_controller.maximal_generation);
 
     this.dispatchEvent("updates");
   }

@@ -11,6 +11,7 @@ class CreaturesController {
     this.maximal_age = 0;
     this.last_tick_timecode = Date.now();
     this.sim_speed = 1;
+    this.creatures_density = 0;
 
     //constants    
     this.MINIMAL_CREATURES_DENSITY = 0.03//0.005; //creatures per cell
@@ -25,10 +26,12 @@ class CreaturesController {
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
     this.CREATURE_SATIETY_DOWNGRADE = 0.0001;
-    this.CHILD_NET_MUTATE_RANGE = new Range(-0.001, 0.001);
-    this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.005, 0.005);
+    this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
+    this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
+    this.NEW_CREATURE_FOOD_VARIETY = -0.43;
+    this.NEW_CREATURE_MAX_AGE = 50 * 1000;
 
     //other
     this._debug = false;
@@ -168,7 +171,9 @@ class CreaturesController {
 
   _creaturesDensity() {
     let creatures_count = Object.keys(this.creatures).length;
-    return creatures_count == 0 ? 0 : creatures_count / this.map.width / this.map.height;
+    let density = creatures_count == 0 ? 0 : creatures_count / this.map.width / this.map.height;
+    this.creatures_density = density;
+    return density;
   }
 
   addCreature(creature) {
@@ -197,7 +202,9 @@ class CreaturesController {
       Math.random(),
       this.viewZoneGetter.bind(this),
       parent_action_net ? parent_action_net : this._generateActionNet(),
-      parent_move_net ? parent_move_net : this._generateMoveNet()
+      parent_move_net ? parent_move_net : this._generateMoveNet(),
+      this.NEW_CREATURE_FOOD_VARIETY,
+      this.NEW_CREATURE_MAX_AGE
     );
     this._processNewCreature(creature);
     return creature;
@@ -213,7 +220,9 @@ class CreaturesController {
       Math.random(),
       this.viewZoneGetter.bind(this),
       parent_action_net ? parent_action_net : this._generateActionNet(),
-      parent_move_net ? parent_move_net : this._generateMoveNet()
+      parent_move_net ? parent_move_net : this._generateMoveNet(),
+      this.NEW_CREATURE_FOOD_VARIETY,
+      this.NEW_CREATURE_MAX_AGE
     );
     this._processNewCreature(creature);
     return creature;
