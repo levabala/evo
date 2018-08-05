@@ -7,7 +7,7 @@ class EvoStimulator {
 
     //constants
     this.CREATURES_DENSITY_TRIGGER = 0.17;
-    this.FOOD_VARIETY_ADDITION = -0.002;
+    this.FOOD_VARIETY_ADDITION = -0.001;
   }
 
   _stimulate() {

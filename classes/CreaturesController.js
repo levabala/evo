@@ -30,12 +30,13 @@ class CreaturesController {
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
-    this.NEW_CREATURE_FOOD_VARIETY = -0.48;
+    this.NEW_CREATURE_FOOD_VARIETY = -0.47;
     this.NEW_CREATURE_MAX_AGE = 50 * 1000;
 
     //other
     this._debug = false;
     this._time_buffer_1 = 0;
+    this._time_buffer_2 = 0;
 
     //events    
     this.registerEvent(this.NEW_CREATURE_EVENT);
@@ -49,38 +50,57 @@ class CreaturesController {
     this.last_tick_timecode = timecode;
     this.sim_speed = sim_speed;
 
+    time += this._time_buffer_2;
+    this._time_buffer_2 = 0;
+
     let max_actions_count = Object.values(this.creatures).reduce(
       (max_count, creature) => {
-        return Math.max(max_count, creature.actionsToDoCount());
-      }, 1
+        return Math.max(max_count, creature.actionsToDoCount(time));
+      }, 0
     );
-
     let time_per_tick = Math.floor(time / sim_speed / max_actions_count);
+    console.log(sim_speed)
     console.log(time, time_per_tick, max_actions_count)
 
     for (let i = 0; i < max_actions_count; i++) {
       this.last_tick_timecode += time_per_tick;
       this._internal_tick(time_per_tick * sim_speed);
     }
+    this._auto_add_creatures(time);
+
+    if (max_actions_count > 0)
+      this._time_buffer_2 += time - time_per_tick * max_actions_count;
+    else {
+      //this._internal_tick(0);
+      this._time_buffer_2 += time;
+    }
+    this._time_buffer_2 = Math.max(this._time_buffer_2, 0);
+    console.log(this._time_buffer_2)
+
+    this.creatures_count = Object.values(this.creatures).length;
   }
 
-  _internal_tick(time) {
+  _auto_add_creatures(time) {
     //if is's too little of creatures, then add new one
+    let creatures_count_1 = Object.values(this.creatures).length;
     const MAX_CREATURE_PER_TICK_ADDED = 10;
     let added = 0;
     this._time_buffer_1 += time;
     let new_creatures_count = Math.floor(((time + this._time_buffer_1) / 1000) * this.NEW_CREATURES_PER_SECS);
     this._time_buffer_1 = Math.max(this._time_buffer_1 - new_creatures_count * 1000, 0);
-    for (var i = 0; i < new_creatures_count; i++)
-      this._generateAndAddCreature();
+    //for (var i = 0; i < new_creatures_count; i++)
+    //this._generateAndAddCreature();
     while (this._checkCreaturesLimit() && added++ < MAX_CREATURE_PER_TICK_ADDED) { }
+    let creatures_added = Object.values(this.creatures).length - creatures_count_1;
+    console.log("creatures added:", creatures_added)
+  }
 
+  _internal_tick(time) {
     this.maximal_generation = 0;
     this.maximal_age = 0;
 
     //all creatures tick
     let creatures = Object.values(this.creatures);
-    this.creatures_count = creatures.length;
     for (var creature of creatures) {
       creature.tick(time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
@@ -101,10 +121,10 @@ class CreaturesController {
 
   viewZoneGetter(pos) {
     let view_zone = {
-      left: this.map.cellAtPoint(pos.move(-1, 0)).update(this.last_tick_timecode, this.sim_speed),
-      right: this.map.cellAtPoint(pos.move(1, 0)).update(this.last_tick_timecode, this.sim_speed),
-      top: this.map.cellAtPoint(pos.move(0, -1)).update(this.last_tick_timecode, this.sim_speed),
-      bottom: this.map.cellAtPoint(pos.move(0, 1)).update(this.last_tick_timecode, this.sim_speed),
+      left: this.map.cellAtPoint(pos.clone().move(-1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      right: this.map.cellAtPoint(pos.clone().move(1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      top: this.map.cellAtPoint(pos.clone().move(0, -1)).update(this.last_tick_timecode, this.sim_speed),
+      bottom: this.map.cellAtPoint(pos.clone().move(0, 1)).update(this.last_tick_timecode, this.sim_speed),
       center: this.map.cells[pos.x][pos.y].update(this.last_tick_timecode, this.sim_speed)
     };
 
@@ -150,6 +170,8 @@ class CreaturesController {
     new_creature.id = this.creatures_counter;
     new_creature.generation = creature.generation + 1;
     new_creature.fatigue = 0;
+    new_creature.food_variety = this.NEW_CREATURE_FOOD_VARIETY;
+    new_creature.max_age = this.NEW_CREATURE_MAX_AGE;
 
     this._processNewCreature(new_creature);
     this.addCreature(new_creature);

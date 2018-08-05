@@ -62,7 +62,7 @@ class SimMaster {
     console.log(`maximal generation: ${this.creatures_controller.maximal_generation}`)
     console.log(`latest creature id: #${this.creatures_controller.creatures_counter}`)
 
-    this.map_controller.tick(timeDelta, nowTime, this.sim_speed);
+    //this.map_controller.tick(timeDelta, nowTime, this.sim_speed);
 
     this.creatures_controller.tick(timeDelta, nowTime, this.tick_interval * this.sim_speed, this.sim_speed);
 

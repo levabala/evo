@@ -52,7 +52,7 @@ class Creature {
     return new Creature(
       this.id, this.coordinates.clone(), this.satiety,
       this.toxicity_resistance, this.eating_type, this.request_view_zone,
-      this.action_net.clone(), this.move_net.clone()
+      this.action_net.clone(), this.move_net.clone(), this.eating_type, this.max_age
     );
   }
 
@@ -60,8 +60,9 @@ class Creature {
     this.timecode = Date.now();
   }
 
-  actionsToDoCount() {
-    return Math.floor(Math.max(-this.fatigue, 0) / this.ACTION_COST);
+  actionsToDoCount(time) {
+    let fatigue_lost = time * this.FATIGUE_DONWGRADE;
+    return Math.floor(Math.max(fatigue_lost, 0) / this.ACTION_COST);
   }
 
   tick(time) {
@@ -101,7 +102,7 @@ class Creature {
     ];
 
     action(this);
-    this.fatigue += this.ACTION_COST;
+    this.fatigue = Math.max(0, this.fatigue + this.ACTION_COST);
   }
 
   split() {

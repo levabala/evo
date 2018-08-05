@@ -20,6 +20,7 @@ class Cell {
   update(timecode, sim_speed) {
     let delta = (timecode - this.last_update_timecode) * sim_speed;
     this.last_update_timecode = timecode;
+    //console.log(delta)
 
     this._do_all_stuff(delta);
 
