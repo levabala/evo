@@ -34,6 +34,7 @@ class Creature {
     this.registerEvent("wanna_eat");
     this.registerEvent("wanna_move");
     this.registerEvent("wanna_split");
+    this.registerEvent("action_performed");
   }
 
   mutateProps(range) {
@@ -65,15 +66,13 @@ class Creature {
     return Math.floor(Math.max(fatigue_lost, 0) / this.ACTION_COST);
   }
 
+  timePerAction() {
+    return this.ACTION_COST / this.FATIGUE_DONWGRADE;
+  }
+
   tick(time) {
     this.age += time;
     this._downGradeFatigue(time);
-    /*let actions_done = 0;
-    while (this.fatigue <= 0) {
-      this._makeAction();
-      this._checkForSplit();
-      actions_done++;
-    }*/
     if (this.fatigue <= 0) {
       this._makeAction();
       this._checkForSplit();
@@ -155,16 +154,15 @@ class Creature {
     let type_diff_coeff = 1;
     if (type_diff < 0.5) {
       type_diff_coeff = Math.pow(1 - type_diff, 1 / (2 * this.food_variety + 1));
-    }
-    else {
+    } else {
       type_diff_coeff = -Math.pow(type_diff, 1 / (2 * this.food_variety + 1));
     }
     //console.log(Math.round(type_diff_coeff * 100) / 100, Math.round(amount * 100) / 100, Math.round(age_modificator * 100) / 100)
     var effect =
-      type_diff_coeff
-      * amount
-      * age_modificator
-      * this.FOOD_MULTIPLITER;
+      type_diff_coeff *
+      amount *
+      age_modificator *
+      this.FOOD_MULTIPLITER;
     if (isNaN(type_diff_coeff))
       debugger;
     //console.log(`food lost: ${amount - effect}`);

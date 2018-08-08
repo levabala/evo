@@ -18,11 +18,20 @@ class Cell {
   }
 
   update(timecode, sim_speed) {
+    let real_delta = timecode - this.last_update_timecode;
     let delta = (timecode - this.last_update_timecode) * sim_speed;
-    this.last_update_timecode = timecode;
-    //console.log(delta)
+    this.last_update_timecode = Math.max(timecode, this.last_update_timecode);
 
-    this._do_all_stuff(delta);
+    if (delta == undefined)
+      debugger;
+
+    if (delta > 0)
+      this._do_all_stuff(delta);
+    if (delta < 0) {
+      let dd = (timecode - this.last_update_timecode) * sim_speed;
+      let a = dd * 23;
+      debugger;
+    }
 
     return this;
   }

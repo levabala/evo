@@ -14,7 +14,7 @@ class CreaturesController {
     this.creatures_density = 0;
 
     //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.03//0.005; //creatures per cell
+    this.MINIMAL_CREATURES_DENSITY = 0.03; //0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
     this.AFTER_SPLIT_SATIETY = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
@@ -47,52 +47,46 @@ class CreaturesController {
   }
 
   tick(time, timecode, tick_length, sim_speed) {
-    this.last_tick_timecode = timecode;
     this.sim_speed = sim_speed;
 
-    time += this._time_buffer_2;
-    this._time_buffer_2 = 0;
+    let real_delta = timecode - this.last_tick_timecode;
+    let sim_delta = real_delta * sim_speed;
 
-    let max_actions_count = Object.values(this.creatures).reduce(
+    this._auto_add_creatures();
+    let creatures = Object.values(this.creatures);
+    let max_actions_count = creatures.reduce(
       (max_count, creature) => {
-        return Math.max(max_count, creature.actionsToDoCount(time));
+        return Math.max(max_count, creature.actionsToDoCount(sim_delta));
       }, 0
     );
-    let time_per_tick = Math.floor(time / sim_speed / max_actions_count);
-    console.log(sim_speed)
-    console.log(time, time_per_tick, max_actions_count)
+    let min_time_per_action = creatures.reduce(
+      (time_per_action, creature) => {
+        return Math.min(time_per_action, creature.timePerAction());
+      }, Number.MAX_SAFE_INTEGER
+    );
+    console.log("max actions count:", max_actions_count);
+    console.log("min action time:", min_time_per_action);
+    console.log("sim speed:", this.sim_speed);
+    console.log("sim delta:", sim_delta);
+    console.log("creatures density:", Math.round(this.creatures_density * 100000) / 100000);
+    if (max_actions_count == 0)
+      return false;
 
+    let real_time_per_tick = min_time_per_action / sim_speed; //sim_delta / sim_speed / max_actions_count;
+    let sim_time_per_tick = min_time_per_action; //sim_delta / max_actions_count;
+    //console.log("real time per tick:", real_time_per_tick);
+    //console.log("sim time per tick:", sim_time_per_tick);
     for (let i = 0; i < max_actions_count; i++) {
-      this.last_tick_timecode += time_per_tick;
-      this._internal_tick(time_per_tick * sim_speed);
+      this._internal_tick(sim_time_per_tick);
+      this.last_tick_timecode += real_time_per_tick;
     }
-    this._auto_add_creatures(time);
+    //this.last_tick_timecode = timecode;
 
-    if (max_actions_count > 0)
-      this._time_buffer_2 += time - time_per_tick * max_actions_count;
-    else {
-      //this._internal_tick(0);
-      this._time_buffer_2 += time;
-    }
-    this._time_buffer_2 = Math.max(this._time_buffer_2, 0);
-    console.log(this._time_buffer_2)
-
-    this.creatures_count = Object.values(this.creatures).length;
+    return true;
   }
 
-  _auto_add_creatures(time) {
-    //if is's too little of creatures, then add new one
-    let creatures_count_1 = Object.values(this.creatures).length;
-    const MAX_CREATURE_PER_TICK_ADDED = 10;
-    let added = 0;
-    this._time_buffer_1 += time;
-    let new_creatures_count = Math.floor(((time + this._time_buffer_1) / 1000) * this.NEW_CREATURES_PER_SECS);
-    this._time_buffer_1 = Math.max(this._time_buffer_1 - new_creatures_count * 1000, 0);
-    //for (var i = 0; i < new_creatures_count; i++)
-    //this._generateAndAddCreature();
-    while (this._checkCreaturesLimit() && added++ < MAX_CREATURE_PER_TICK_ADDED) { }
-    let creatures_added = Object.values(this.creatures).length - creatures_count_1;
-    console.log("creatures added:", creatures_added)
+  _auto_add_creatures() {
+    while (this._checkCreaturesLimit()) {}
   }
 
   _internal_tick(time) {
@@ -104,14 +98,13 @@ class CreaturesController {
     for (var creature of creatures) {
       creature.tick(time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
-      if (isNaN(creature.satiety))
-        debugger;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
-        this._removeCreature(creature)
+        this._removeCreature(creature);
 
       this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
       this.maximal_age = Math.max(this.maximal_age, creature.age);
     }
+    this.creatures_count = creatures.length;
   }
 
   reset() {
@@ -138,16 +131,17 @@ class CreaturesController {
     let deltas = [
       new P(1, 0), new P(1, 1), new P(0, 1),
       new P(-1, 1), new P(-1, 0), new P(-1, -1),
-      new P(0, -1), new P(1, -1)];
+      new P(0, -1), new P(1, -1)
+    ];
 
     let free_deltas = deltas.filter(
-      function(delta) {
+      function (delta) {
         let pos = center.clone().add(delta);
         if (!pos.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE))
           return false;
         let cell_creatures_count = Object.keys(
           this.map.cellAtPoint.bind(map)(pos)
-            .walking_creatures).length;
+          .walking_creatures).length;
         return cell_creatures_count == 0;
       }.bind(this)
     );
@@ -162,8 +156,8 @@ class CreaturesController {
     ]);
     let new_creature =
       creature.clone()
-        .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
-        .mutateNets(this.CHILD_NET_MUTATE_RANGE);
+      .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
+      .mutateNets(this.CHILD_NET_MUTATE_RANGE);
     new_creature.coordinates = spawn_position;
     new_creature.satiety = this.NEW_CREATURE_SATIETY;
     this.creatures_counter++;
@@ -180,12 +174,10 @@ class CreaturesController {
   }
 
   _checkCreaturesLimit() {
-    let creatures_density = this._creaturesDensity();
-    if (creatures_density < this.MINIMAL_CREATURES_DENSITY) {
+    this.creatures_density = this._creaturesDensity();
+    if (this.creatures_density < this.MINIMAL_CREATURES_DENSITY) {
       this._generateAndAddCreature();
-      creatures_density = this._creaturesDensity();
-      if (this._debug)
-        console.log("creatures density:", creatures_density)
+      this.creatures_density = this._creaturesDensity();
       return true;
     }
     return false;
@@ -259,17 +251,17 @@ class CreaturesController {
     creature
       .addEventListener(
         "wanna_move",
-        function(new_position) {
+        function (new_position) {
           this._creatureWannaMove(creature, new_position);
         }.bind(this))
       .addEventListener(
         "wanna_eat",
-        function() {
+        function () {
           this._cratureWannaEat(creature);
         }.bind(this))
       .addEventListener(
         "wanna_split",
-        function(pos) {
+        function (pos) {
           this._splitCreature(creature);
         }.bind(this));
   }
@@ -297,8 +289,6 @@ class CreaturesController {
 
     //notify controller&visualizer
     this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);
-    if (this._debug)
-      creature.say("moved to " + new_position);
   }
 
   _generateCreatures(x_range, y_range, amount) {
@@ -313,8 +303,23 @@ class CreaturesController {
     //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
-      [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
-      [[v, v], [v, v], [v, v]], //output
+      [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v]
+      ], //input
+      [
+        [v, v],
+        [v, v],
+        [v, v]
+      ], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
       ),
@@ -328,8 +333,23 @@ class CreaturesController {
     //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
-      [[v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v], [v, v, v]], //input
-      [[v, v, v, v], [v, v, v, v], [v, v, v, v]], //output
+      [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v]
+      ], //input
+      [
+        [v, v, v, v],
+        [v, v, v, v],
+        [v, v, v, v]
+      ], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
       ),

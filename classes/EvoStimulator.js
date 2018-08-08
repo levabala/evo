@@ -1,28 +1,38 @@
 class EvoStimulator {
   constructor(sim_master) {
-    this.sim_master = sim_master.addEventListener("tick_end", this._stimulate.bind(this));
-    this.stimulate_interval = this.sim_master.creatures_controller.NEW_CREATURE_MAX_AGE;
+    this.sim_master =
+      sim_master
+      .addEventListener("tick_end", this._stimulate.bind(this))
+      .addEventListener("sim_speed_changed", this._changeSimSpeed.bind(this));
+    this.stimulate_interval = this.sim_master.creatures_controller.NEW_CREATURE_MAX_AGE / 4;
     this.timeout = this.stimulate_interval;
     this.last_sim_time = this.sim_master.sim_time;
+    this.next_stimulate_timeout = this.sim_master.lastTimecode;
 
     //constants
     this.CREATURES_DENSITY_TRIGGER = 0.17;
     this.FOOD_VARIETY_ADDITION = -0.001;
   }
 
-  _stimulate() {
-    let delta = this.sim_master.last_tick_duration * this.sim_master.sim_speed;
-    this.timeout -= delta;
+  _changeSimSpeed(sim_speeds) {
+    this.next_stimulate_timeout = this.sim_master.lastTimecode + this.timeout * sim_speeds.last / sim_speeds.new;
+    //TODO: make it normal, please)
+  }
 
-    if (this.timeout <= 0) {
+  _stimulate() {
+    let delta = this.next_stimulate_timeout - this.sim_master.lastTimecode;
+    if (isNaN(delta))
+      debugger;
+    this.timeout = delta;
+
+    if (delta <= 0) {
       if (this.sim_master.creatures_controller.creatures_density >= this.CREATURES_DENSITY_TRIGGER) {
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY += this.FOOD_VARIETY_ADDITION;
-        console.warn("NEED STIMULATE")
+        this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
+          Math.max(this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY, -0.5);
+        console.warn("NEED STIMULATE");
       }
-      this.timeout = this.stimulate_interval;
+      this.next_stimulate_timeout = this.sim_master.lastTimecode + this.stimulate_interval / this.sim_master.sim_speed;
     }
-    console.log(this.timeout, delta, Math.round(
-      this.sim_master.creatures_controller.creatures_density * 1000
-    ) / 1000)
   }
 }
