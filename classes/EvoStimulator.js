@@ -4,13 +4,13 @@ class EvoStimulator {
       sim_master
       .addEventListener("tick_end", this._stimulate.bind(this))
       .addEventListener("sim_speed_changed", this._changeSimSpeed.bind(this));
-    this.stimulate_interval = this.sim_master.creatures_controller.NEW_CREATURE_MAX_AGE / 4;
+    this.stimulate_interval = this.sim_master.creatures_controller.NEW_CREATURE_MAX_AGE * 2;
     this.timeout = this.stimulate_interval;
     this.last_sim_time = this.sim_master.sim_time;
     this.next_stimulate_timeout = this.sim_master.lastTimecode;
 
     //constants
-    this.CREATURES_DENSITY_TRIGGER = 0.17;
+    this.CREATURES_DENSITY_TRIGGER = 0.1;
     this.FOOD_VARIETY_ADDITION = -0.001;
   }
 
@@ -29,7 +29,7 @@ class EvoStimulator {
       if (this.sim_master.creatures_controller.creatures_density >= this.CREATURES_DENSITY_TRIGGER) {
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY += this.FOOD_VARIETY_ADDITION;
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
-          Math.max(this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY, -0.5);
+          Math.max(this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY, -0.499);
         console.warn("NEED STIMULATE");
       }
       this.next_stimulate_timeout = this.sim_master.lastTimecode + this.stimulate_interval / this.sim_master.sim_speed;

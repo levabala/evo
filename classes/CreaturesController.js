@@ -14,7 +14,7 @@ class CreaturesController {
     this.creatures_density = 0;
 
     //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.03; //0.005; //creatures per cell
+    this.MINIMAL_CREATURES_DENSITY = 0.005; //0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
     this.AFTER_SPLIT_SATIETY = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;

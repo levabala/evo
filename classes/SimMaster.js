@@ -20,6 +20,7 @@ class SimMaster {
 
     //constants
     this.MAX_TICK_SIM_TIME = 7000;
+    this.MAP_UPDATE_FREQ = 5; //1 update per 10 ticks
 
     //events
     this.registerEvent("tick_start");
@@ -96,7 +97,7 @@ class SimMaster {
     console.log(`latest creature id: #${this.creatures_controller.creatures_counter}`)
 
     let anything_done = this.creatures_controller.tick(timeDelta, nowTime, this._tick_interval * this._sim_speed, this._sim_speed);
-    if (anything_done)
+    if (anything_done && this.ticks_counter % this.MAP_UPDATE_FREQ == 0)
       this.map_controller.tick(
         this.creatures_controller - this.lastTimecode,
         this.creatures_controller.last_tick_timecode,
