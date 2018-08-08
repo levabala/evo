@@ -11,6 +11,7 @@ class EvoStimulator {
 
     //constants
     this.CREATURES_DENSITY_TRIGGER = 0.1;
+    this.CREATURES_DENSITY_LOW_TRIGGER = 0.007;
     this.FOOD_VARIETY_ADDITION = -0.001;
     this.FOOD_VARIETY_ADDITION_COEFF = 1.01;
   }
@@ -31,11 +32,15 @@ class EvoStimulator {
     if (delta <= 0) {
       if (this.sim_master.creatures_controller.creatures_density >= this.CREATURES_DENSITY_TRIGGER) {
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY += this.FOOD_VARIETY_ADDITION;
-        //this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
-        //  this._food_variety_fun(this.FOOD_VARIETY_ADDITION_COEFF);
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
           Math.max(this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY, -0.499);
         console.warn("NEED STIMULATE");
+      } else
+      if (this.sim_master.creatures_controller.creatures_density <= this.CREATURES_DENSITY_LOW_TRIGGER) {
+        this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY -= this.FOOD_VARIETY_ADDITION;
+        this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
+          Math.min(this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY, -0.475);
+        console.warn("NEED DOWN STIMULATE");
       }
       this.next_stimulate_timeout = this.sim_master.lastTimecode + this.stimulate_interval / this.sim_master.sim_speed;
     }
