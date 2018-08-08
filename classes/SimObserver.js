@@ -8,6 +8,18 @@ class SimObserver {
       max_generation: [],
     }
 
+    //info
+    this.info = {
+      "real_time": new Info("Real time", 0, (value) => `${Math.round(value / 1000)}sec`),
+      "sim_time": new Info("Simulation time", 0, (value) => `${Math.round(value / 1000)}sec`),
+      "sim_speed": new Info("Simulation speed", 0, (value) => `x${value}`),
+      "creatures_count": new Info("Creatures count", 0),
+      "creatures_density": new Info("Creatures density", 0),
+      "max_generation": new Info("Max generation", 0),
+      "max_age": new Info("Max age", 0, (value) => `${value / 1000}sec`),
+      "food_variety": new Info("Food variety", 0),
+    };
+
     //constants
     this.UDPDATE_INTERVAL = 100;
 
@@ -17,9 +29,25 @@ class SimObserver {
     setInterval(this._updateLogs.bind(this), this.UDPDATE_INTERVAL);
   }
 
+  connectInfoBox(info_box) {
+    for (let entrie of Object.entries(this.info))
+      info_box.addInfo(entrie[0], entrie[1]);
+    return this;
+  }
+
   _updateLogs() {
-    this.logs.creatures_count.push(this.sim_master.creatures_controller.creatures_count);
-    this.logs.max_generation.push(this.sim_master.creatures_controller.maximal_generation);
+    let controller = this.sim_master.creatures_controller;
+    this.logs.creatures_count.push(controller.creatures_count);
+    this.logs.max_generation.push(controller.maximal_generation);
+
+    this.info.real_time.value = this.sim_master.sim_time / this.sim_master.sim_speed;
+    this.info.sim_time.value = this.sim_master.sim_time;
+    this.info.sim_speed.value = controller.sim_speed;
+    this.info.creatures_count.value = controller.creatures_count;
+    this.info.creatures_density.value = controller.creatures_density;
+    this.info.max_generation.value = controller.maximal_generation;
+    this.info.max_age.value = controller.maximal_age;
+    this.info.food_variety.value = controller.NEW_CREATURE_FOOD_VARIETY;
 
     this.dispatchEvent("updates");
   }

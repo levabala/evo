@@ -14,12 +14,14 @@ class SimMaster {
     this.launch_time = Date.now();
     this.targered_sim_speed = 0;
     this.sim_time = 0;
+    this.debug = false;
 
     this.lastTimecode = null;
     this.simulationTimeout = null;
 
     //constants
     this.MAX_TICK_SIM_TIME = 7000;
+    this.MAP_UPDATE_FREQ = 2; //1 update per 10 ticks
 
     //events
     this.registerEvent("tick_start");
@@ -88,15 +90,17 @@ class SimMaster {
     timeDelta = Math.min(timeDelta, this.MAX_TICK_SIM_TIME);
     this.sim_time += timeDelta;
 
-    console.log(`--- Tick #${this.ticks_counter++} dur: ${this.last_tick_duration}ms ---`);
-    console.log(`real duration: ${Math.round((Date.now() - this.launch_time) / 1000)}secs`)
-    console.log(`sim duration: ${Math.floor(this.sim_time / 1000)}sec`)
-    console.log(`maximal age: ${Math.floor(this.creatures_controller.maximal_age / 1000)}secs`)
-    console.log(`maximal generation: ${this.creatures_controller.maximal_generation}`)
-    console.log(`latest creature id: #${this.creatures_controller.creatures_counter}`)
+    if (this.debug) {
+      console.log(`--- Tick #${this.ticks_counter} dur: ${this.last_tick_duration}ms ---`);
+      console.log(`real duration: ${Math.round((Date.now() - this.launch_time) / 1000)}secs`)
+      console.log(`sim duration: ${Math.floor(this.sim_time / 1000)}sec`)
+      console.log(`maximal age: ${Math.floor(this.creatures_controller.maximal_age / 1000)}secs`)
+      console.log(`maximal generation: ${this.creatures_controller.maximal_generation}`)
+      console.log(`latest creature id: #${this.creatures_controller.creatures_counter}`)
+    }
 
     let anything_done = this.creatures_controller.tick(timeDelta, nowTime, this._tick_interval * this._sim_speed, this._sim_speed);
-    if (anything_done)
+    if (anything_done && this.ticks_counter % this.MAP_UPDATE_FREQ == 0)
       this.map_controller.tick(
         this.creatures_controller - this.lastTimecode,
         this.creatures_controller.last_tick_timecode,
@@ -115,8 +119,9 @@ class SimMaster {
       this.silentSimSpeed(Math.min(this.sim_speed * 1.1, this.targered_sim_speed));
 
     this.dispatchEvent("tick_end");
+    this.ticks_counter++;
 
-    if (this.ticks_counter % 500 == 0)
+    if (this.debug && this.ticks_counter % 500 == 0)
       console.clear();
   }
 }

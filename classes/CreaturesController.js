@@ -14,7 +14,7 @@ class CreaturesController {
     this.creatures_density = 0;
 
     //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.03; //0.005; //creatures per cell
+    this.MINIMAL_CREATURES_DENSITY = 0.005; //0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
     this.AFTER_SPLIT_SATIETY = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
@@ -34,7 +34,7 @@ class CreaturesController {
     this.NEW_CREATURE_MAX_AGE = 50 * 1000;
 
     //other
-    this._debug = false;
+    this.debug = false;
     this._time_buffer_1 = 0;
     this._time_buffer_2 = 0;
 
@@ -64,11 +64,14 @@ class CreaturesController {
         return Math.min(time_per_action, creature.timePerAction());
       }, Number.MAX_SAFE_INTEGER
     );
-    console.log("max actions count:", max_actions_count);
-    console.log("min action time:", min_time_per_action);
-    console.log("sim speed:", this.sim_speed);
-    console.log("sim delta:", sim_delta);
-    console.log("creatures density:", Math.round(this.creatures_density * 100000) / 100000);
+    if (this.debug) {
+      console.log("max actions count:", max_actions_count);
+      console.log("min action time:", min_time_per_action);
+      console.log("sim speed:", this.sim_speed);
+      console.log("sim delta:", sim_delta);
+      console.log("creatures density:", Math.round(this.creatures_density * 100000) / 100000);
+      console.log("food variety:", this.NEW_CREATURE_FOOD_VARIETY);
+    }
     if (max_actions_count == 0)
       return false;
 
