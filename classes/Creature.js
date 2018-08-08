@@ -8,6 +8,7 @@ class Creature {
 
     this.id = id;
     this.satiety = satiety;
+    this.satiety_gained = 0;
     this.toxicity_resistance = toxicity_resistance;
     this.eating_type = eating_type;
     this.coordinates = coordinates;
@@ -18,6 +19,7 @@ class Creature {
     this.generation = 1;
     this.food_variety = food_variety;
     this.max_age = max_age;
+    this.effectivity = 0;
 
     //neural networks
     this.action_net = action_net;
@@ -161,12 +163,13 @@ class Creature {
     var effect =
       type_diff_coeff *
       amount *
-      age_modificator *
-      this.FOOD_MULTIPLITER;
+      age_modificator
     if (isNaN(type_diff_coeff))
       debugger;
     //console.log(`food lost: ${amount - effect}`);
 
+    this.satiety_gained += effect;
+    this.effectivity = this.satiety_gained / this.age * 1000;
     this.satiety = Math.min(this.satiety + effect, 1);
     cell.food_amount -= amount;
     this._register_update();

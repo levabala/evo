@@ -9,6 +9,7 @@ class CreaturesController {
     this.creatures_count = 0;
     this.maximal_generation = 0;
     this.maximal_age = 0;
+    this.maximal_effectivity = 0;
     this.last_tick_timecode = Date.now();
     this.sim_speed = 1;
     this.creatures_density = 0;
@@ -31,7 +32,7 @@ class CreaturesController {
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
     this.NEW_CREATURE_FOOD_VARIETY = -0.47;
-    this.NEW_CREATURE_MAX_AGE = 50 * 1000;
+    this.NEW_CREATURE_MAX_AGE = 100 * 1000;
 
     //other
     this.debug = false;
@@ -95,6 +96,7 @@ class CreaturesController {
   _internal_tick(time) {
     this.maximal_generation = 0;
     this.maximal_age = 0;
+    this.maximal_effectivity = 0;
 
     //all creatures tick
     let creatures = Object.values(this.creatures);
@@ -106,6 +108,7 @@ class CreaturesController {
 
       this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
       this.maximal_age = Math.max(this.maximal_age, creature.age);
+      this.maximal_effectivity = Math.max(this.maximal_effectivity, creature.effectivity);
     }
     this.creatures_count = creatures.length;
   }

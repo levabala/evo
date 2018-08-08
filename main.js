@@ -2,6 +2,7 @@ var div_map = document.getElementById("div_drawing");
 var div_graph_population = document.getElementById("div_graph2");
 var div_graph_generation = document.getElementById("div_graph1");
 var div_info = document.getElementById("div_info");
+var range_sim_speed = document.getElementById("range_sim_speed");
 var size = 100;
 var coeff_x = 9 / 13;
 var coeff_y = 5 / 13;
@@ -16,6 +17,22 @@ var master = new SimMaster(
 );
 var evo_stimulator = new EvoStimulator(master);
 var info_box = new InfoBox(div_info);
+
+let power = 2;
+range_sim_speed.value = Math.pow(master.sim_speed, 1 / power);
+range_sim_speed.oninput = function () {
+  if (!range_sim_speed.revert_set)
+    master.sim_speed = Math.pow(this.value, power);
+  else
+    range_sim_speed.revert_set = false;
+}
+range_sim_speed.onclick = () => range_sim_speed.revert_set = false;
+master.addEventListener("sim_speed_changed", function () {
+  if (range_sim_speed.value != master.sim_speed) {
+    range_sim_speed.value = Math.pow(master.sim_speed, 1 / power);
+    range_sim_speed.revert_set = true;
+  }
+});
 
 setTimeout(function () {
   var sim_observer =
