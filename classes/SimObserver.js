@@ -12,6 +12,7 @@ class SimObserver {
     this.info = {
       "real_time": new Info("Real time", 0, (value) => `${Math.round(value / 1000)}sec`),
       "sim_time": new Info("Simulation time", 0, (value) => `${Math.round(value / 1000)}sec`),
+      "tick_duration": new Info("Tick duration", 0, (value) => `${value}ms`),
       "sim_speed": new Info("Simulation speed", 0, (value) => `x${value}`),
       "creatures_count": new Info("Creatures count", 0),
       "creatures_density": new Info("Creatures density", 0),
@@ -48,6 +49,7 @@ class SimObserver {
     this.info.max_generation.value = controller.maximal_generation;
     this.info.max_age.value = controller.maximal_age;
     this.info.food_variety.value = controller.NEW_CREATURE_FOOD_VARIETY;
+    this.info.tick_duration.value = this.sim_master.last_tick_duration;
 
     this.dispatchEvent("updates");
   }
