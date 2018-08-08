@@ -9,17 +9,19 @@ class VisualizerSVG {
     this.map_contoller = map_contoller;
     this.creatures_controller =
       creatures_controller
-        .addEventListener(
-          creatures_controller.NEW_CREATURE_EVENT,
-          this._addCreature.bind(this)
-        )
-        .addEventListener(
-          creatures_controller.DEAD_CREATURE_EVENT,
-          this._removeCreature.bind(this)
-        );
+      .addEventListener(
+        creatures_controller.NEW_CREATURE_EVENT,
+        this._addCreature.bind(this)
+      )
+      .addEventListener(
+        creatures_controller.DEAD_CREATURE_EVENT,
+        this._removeCreature.bind(this)
+      );
     this.map = map_contoller.map;
     this.creatures_drawings = {}; //id - drawing
     this.cells_drawings = [];
+    this.width = 0;
+    this.height = 0;
 
     //constants
     this.CELL_SIZE = 1; //no effect nowday 
@@ -31,14 +33,19 @@ class VisualizerSVG {
     this._drawBackground();
     this._createCells();
     this._drawNet();
-    setTimeout(function() {
+
+    /*setTimeout(function () {
       this.auto_scale()
-      setTimeout(this._resize_main_div.bind(this), 1000);
-    }.bind(this), 100);
+      setTimeout(this._resize_main_div.bind(context), 1000);
+    }.bind(context), 100);*/
 
     //start redrawing cycle
+    this._updateSize();
     this._update_creatures();
     this._update_cells();
+    this.auto_scale();
+    this._resize_main_div();
+    this._addWheelScaling();
   }
 
   auto_scale() {
@@ -50,6 +57,39 @@ class VisualizerSVG {
     this.main_group.matrix(no_translate_matrix);
   }
 
+  _addWheelScaling() {
+    const scrollSensitivity = 0.2;
+    let x = 0;
+    let y = 0;
+    this.main_nest.node.addEventListener("mousewheel", function (e) {
+      let evt = window.event || e;
+      let scroll = evt.detail ? evt.detail * scrollSensitivity : (evt.wheelDelta / 120) * scrollSensitivity;
+
+      let transform = this.main_group.attr("transform").replace(/ /g, "");
+
+      let vector = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(",")
+      vector[0] = (+vector[0] + scroll) + '';
+      vector[3] = vector[0];
+
+      /*let scale = parseFloat(vector[0]);
+      let matrix = new SVG.Matrix().scale(scale, scale).translate(vector[4], vector[5]).inverse();
+      let point = new SVG.Point(x, y).transform(matrix);
+      vector[4] = -point.x;
+      vector[5] = -point.y;*/
+
+      this.main_group.attr("transform", "matrix(" + vector.join() + ")");
+
+      return true;
+    }.bind(this), false);
+
+    let jq_nest = $(this.main_group);
+    this.main_nest.node.addEventListener("mousemove", function (evt) {
+      let offset = jq_nest.offset();
+      x = evt.pageX - offset.left;
+      y = evt.pageY - offset.top;
+    }.bind(this));
+  }
+
   _createCells() {
     let cells = [];
     for (var x = 0; x < this.map.width; x++) {
@@ -59,8 +99,8 @@ class VisualizerSVG {
         let color = this._generateCellColor(cell);
         cells[x][y] =
           this.main_group.rect(1, 1)
-            .move(x, y)
-            .fill(color);
+          .move(x, y)
+          .fill(color);
       }
     }
     this.cells_drawings = cells;
@@ -91,9 +131,9 @@ class VisualizerSVG {
     let size = this._getCreatureSize(creature);
     this.creatures_drawings[creature.id] =
       this.main_group.rect(size, size)
-        .cx(creature.coordinates.x + 0.5)
-        .cy(creature.coordinates.y + 0.5)
-        .fill(this._generateCreatureColor(creature));
+      .cx(creature.coordinates.x + 0.5)
+      .cy(creature.coordinates.y + 0.5)
+      .fill(this._generateCreatureColor(creature));
   }
 
   _removeCreature(creature) {
@@ -108,13 +148,16 @@ class VisualizerSVG {
     this.draw.size(width + "px", height + "px");
   }
 
-  _calcScale() {
+  _updateSize() {
     let jq_div = $(this.div);
-    let width = jq_div.width();
-    let height = jq_div.height()
+    this.width = jq_div.width();
+    this.height = jq_div.height()
+  }
+
+  _calcScale() {
     return {
-      sx: width / (this.map.width),
-      sy: height / (this.map.height),
+      sx: this.width / (this.map.width),
+      sy: this.height / (this.map.height),
     }
   }
 
@@ -138,8 +181,8 @@ class VisualizerSVG {
         Math.round(drawing.cy()) != creature.coordinates.y + 1
       )
         drawing
-          .cx(creature.coordinates.x + 0.5)
-          .cy(creature.coordinates.y + 0.5);
+        .cx(creature.coordinates.x + 0.5)
+        .cy(creature.coordinates.y + 0.5);
 
       //sizing
       if (size_change)
@@ -166,9 +209,17 @@ class VisualizerSVG {
 
   _drawNet() {
     for (var x = 0; x < this.map.width + 1; x++)
-      this.main_group.line(x, 0, x, this.map.height).stroke({ color: "white", opacity: 0.5, width: 0.05 });
+      this.main_group.line(x, 0, x, this.map.height).stroke({
+        color: "white",
+        opacity: 0.5,
+        width: 0.05
+      });
     for (var y = 0; y < this.map.height + 1; y++)
-      this.main_group.line(0, y, this.map.width, y).stroke({ color: "white", opacity: 0.5, width: 0.05 });
+      this.main_group.line(0, y, this.map.width, y).stroke({
+        color: "white",
+        opacity: 0.5,
+        width: 0.05
+      });
   }
 
   _getElMatrix(el) {

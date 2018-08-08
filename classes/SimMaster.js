@@ -21,7 +21,7 @@ class SimMaster {
 
     //constants
     this.MAX_TICK_SIM_TIME = 7000;
-    this.MAP_UPDATE_FREQ = 5; //1 update per 10 ticks
+    this.MAP_UPDATE_FREQ = 2; //1 update per 10 ticks
 
     //events
     this.registerEvent("tick_start");

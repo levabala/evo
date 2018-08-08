@@ -11,7 +11,7 @@ class EvoStimulator {
 
     //constants
     this.CREATURES_DENSITY_TRIGGER = 0.1;
-    this.FOOD_VARIETY_ADDITION = -0.0001;
+    this.FOOD_VARIETY_ADDITION = -0.001;
     this.FOOD_VARIETY_ADDITION_COEFF = 1.01;
   }
 
