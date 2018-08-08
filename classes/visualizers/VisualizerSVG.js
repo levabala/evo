@@ -113,8 +113,8 @@ class VisualizerSVG {
     let width = jq_div.width();
     let height = jq_div.height()
     return {
-      sx: width / (this.map.width + 5),
-      sy: height / (this.map.height + 5),
+      sx: width / (this.map.width),
+      sy: height / (this.map.height),
     }
   }
 

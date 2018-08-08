@@ -11,21 +11,21 @@ var map_controller = new MapController(map);
 var creatures_controller = new CreaturesController(map);
 var sim_visualizer = new VisualizerSVG(div_map, map_controller, creatures_controller);
 var master = new SimMaster(
-  sim_visualizer, creatures_controller, map_controller, 100, 1
+  sim_visualizer, creatures_controller, map_controller, 20, 1
 );
 var evo_stimulator = new EvoStimulator(master);
 
-setTimeout(function() {
+setTimeout(function () {
   var sim_observer =
     new SimObserver(master)
-      .addEventListener("updates", function() {
-        plot_population.applyDataSimple(
-          _.takeRight(sim_observer.logs.creatures_count, 300)
-        );
-        plot_generation.applyDataSimple(
-          _.takeRight(sim_observer.logs.max_generation, 300)
-        );
-      });
-}.bind(this), 500)
+    .addEventListener("updates", function () {
+      plot_population.applyDataSimple(
+        _.takeRight(sim_observer.logs.creatures_count, 300)
+      );
+      plot_generation.applyDataSimple(
+        _.takeRight(sim_observer.logs.max_generation, 300)
+      );
+    });
+}.bind(this), 500);
 
 master.startSimulation();

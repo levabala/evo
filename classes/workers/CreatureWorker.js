@@ -1,6 +1,6 @@
 function CreatureWorker() {
   //importScripts("requestTypes.js", "../NeuralNetwork.js", "../NetworkLayer.js");  
-  let actions_nets = {}; //creature.id - net
+  let action_nets = {}; //creature.id - net
   let move_nets = {};
 
   onmessage = function(e) {
