@@ -33,6 +33,7 @@ class CreaturesController {
     this.NEW_CREATURES_PER_SECS = 1;
     this.NEW_CREATURE_FOOD_VARIETY = -0.47;
     this.NEW_CREATURE_MAX_AGE = 100 * 1000;
+    this.MOVE_COST = 0.01;
 
     //other
     this.debug = false;
@@ -292,6 +293,9 @@ class CreaturesController {
     //add to new one
     let cell = this.map.cells[new_position.x][new_position.y];
     cell.walking_creatures[creature.id] = creature;
+
+    //downgrade satiety
+    creature.satiety -= this.MOVE_COST;
 
     //notify controller&visualizer
     this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);

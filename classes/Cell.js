@@ -12,6 +12,7 @@ class Cell {
     this.walking_creatures = {};
     this.processed_time = 0;
     this.last_update_timecode = Date.now();
+    this.buffer = 0;
 
     //constants
     this.MAX_FOOD_AMOUNT = 0.5;

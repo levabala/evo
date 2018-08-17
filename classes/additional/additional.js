@@ -1,3 +1,19 @@
+const times = [];
+
+//fps counter
+function refreshLoop() {
+  window.requestAnimationFrame(() => {
+    const now = performance.now();
+    while (times.length > 0 && times[0] <= now - 1000) {
+      times.shift();
+    }
+    times.push(now);
+    window.FPS = times.length;
+    refreshLoop();
+  });
+}
+refreshLoop();
+
 class Range {
   constructor(from, to) {
     this.from = from;
@@ -65,13 +81,15 @@ function cloneObj(obj) {
 }
 
 function clone2dArr(array) {
-  return array.map(function(arr) {
+  return array.map(function (arr) {
     return arr.slice();
   });
 }
 
 function creatureWorkerURL(worker_function) {
   return URL.createObjectURL(
-    new Blob(["(" + worker_function.toString() + ")()"], { type: 'text/javascript' })
+    new Blob(["(" + worker_function.toString() + ")()"], {
+      type: 'text/javascript'
+    })
   );
 }

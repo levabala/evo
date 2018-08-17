@@ -1,10 +1,9 @@
 class SimMaster {
   constructor(
-    visualizer, creatures_controller, map_controller,
+    creatures_controller, map_controller,
     tick_interval = 20, sim_speed = 1) {
     Reactor.apply(this, []);
 
-    this.visualizer = visualizer;
     this.creatures_controller = creatures_controller;
     this.map_controller = map_controller;
     this._tick_interval = tick_interval;
@@ -74,10 +73,20 @@ class SimMaster {
 
   continueSimulation() {
     this.lastTimecode = Date.now();
+    /*
+        for (let x = 0; x < this.map_controller.map.width; x++)
+          for (let y = 0; y < this.map_controller.map.height; y++)
+            this.map_controller.map.cells[x][y].last_update_timecode = this.lastTimecode - this.map_controller.map.cells[x][y].buffer;
+    */
     this.simulationTimeout = setTimeout(this.simulationTick.bind(this), 0);
   }
 
   pauseSimulation() {
+    let nowTime = Date.now();
+    /*for (let x = 0; x < this.map_controller.map.width; x++)
+      for (let y = 0; y < this.map_controller.map.height; y++)
+        this.map_controller.map.cells[x][y].buffer = nowTime - this.map_controller.map.cells[x][y].last_update_timecode;
+    */
     clearTimeout(this.simulationTimeout);
   }
 
@@ -107,7 +116,7 @@ class SimMaster {
         this._sim_speed
       );
 
-    var nextTickDelay = Math.max(this._tick_interval - (Date.now() - nowTime), 0);
+    var nextTickDelay = Math.max(this._tick_interval - (Date.now() - nowTime), 10);
     this.simulationTimeout = setTimeout(this.simulationTick.bind(this), nextTickDelay);
 
     this.lastTimecode = nowTime;
