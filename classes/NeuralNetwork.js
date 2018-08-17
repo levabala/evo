@@ -9,11 +9,11 @@ class NeuralNetwork {
     this._debug = false;
 
     if (random) {
-      for (var i in this.input_weights)
-        for (var i2 in this.input_weights[i])
+      for (let i in this.input_weights)
+        for (let i2 in this.input_weights[i])
           this.input_weights[i][i2] = Math.round((Math.random() - 0.5) * 20) / 10;
-      for (var i in this.output_weights)
-        for (var i2 in this.output_weights[i])
+      for (let i in this.output_weights)
+        for (let i2 in this.output_weights[i])
           this.output_weights[i][i2] = Math.round((Math.random() - 0.5) * 20) / 10;
     }
 
@@ -34,11 +34,11 @@ class NeuralNetwork {
   }
 
   mutate(range, mutate_hidden = true) {
-    for (var i in this.input_weights)
-      for (var i2 in this.input_weights[i])
+    for (let i = 0; i < this.input_weights.length; i++)
+      for (let i2 = 0; i2 < this.input_weights[i].length; i2++)
         this.input_weights[i][i2] += range.generateNumber();
-    for (var i in this.output_weights)
-      for (var i2 in this.output_weights[i])
+    for (let i = 0; i < this.output_weights.length; i++)
+      for (let i2 = 0; i2 < this.output_weights[i].length; i2++)
         this.output_weights[i][i2] += range.generateNumber();
 
     if (mutate_hidden)
@@ -47,53 +47,49 @@ class NeuralNetwork {
     return this;
   }
 
-  calc(input) {
-    if (this._debug)
-      console.log("-- calc-iteration --");
-    if (this._debug)
-      console.log("input:", input);
+  _CALC_NON_MINIFIED(input) {
     //calc hidden layer input
-    var hidden_input = [];
-    for (var i = 0; i < this.input_weights[0].length; i++)
+    let hidden_input = [];
+    for (let i = 0; i < this.input_weights[0].length; i++)
       hidden_input[i] = 0;
-    for (var i in this.input_weights)
-      for (var w in this.input_weights[i]) {
-        var weight = this.input_weights[i][w];
-        var value = this.input_fun(input[i]) * weight;
+    for (let i = 0; i < this.input_weights.length; i++)
+      for (let w = 0; w < this.input_weights[i].length; w++) {
+        let weight = this.input_weights[i][w];
+        let value = this.input_fun(input[i]) * weight;
         hidden_input[w] += value;
       }
-
-    if (this._debug)
-      console.log("hidden_input:", hidden_input);
-
     //calc hidden layer
-    var hidden_output = this.hidden_layer.calc(hidden_input);
-
-    if (this._debug)
-      console.log("hidden_output:", hidden_output);
+    let hidden_output = this.hidden_layer.calc(hidden_input);
 
     //calc output
-    var output = [];
-    for (var i = 0; i < this.output_weights[0].length; i++)
+    let output = [];
+    for (let i = 0; i < this.output_weights[0].length; i++)
       output[i] = 0;
-    for (var ho in this.output_weights)
-      for (var o in this.output_weights[ho]) {
-        var weight = this.output_weights[ho][o];
-        var addition = hidden_output[ho] * weight;
+    for (let ho = 0; ho < this.output_weights.length; ho++)
+      for (let o = 0; o < this.output_weights[ho].length; o++) {
+        let weight = this.output_weights[ho][o];
+        let addition = hidden_output[ho] * weight;
         output[o] += addition;
       }
 
-    if (this._debug)
-      console.log("output:", output);
-
     //normalize output
-    for (var o in output)
+    for (let o = 0; o < output.length; o++)
       output[o] = this.output_fun(output[o]);
 
-    if (this._debug)
-      console.log("output_normalized:", output);
-    if (this._debug)
-      console.log("-- calc-iteration-end --");
     return output;
+  }
+
+  calc(a) {
+    let b = [];
+    for (let e = 0; e < this.input_weights[0].length; e++) b[e] = 0;
+    for (let e = 0; e < this.input_weights.length; e++)
+      for (let f = 0; f < this.input_weights[e].length; f++) b[f] += this.input_fun(a[e]) * this.input_weights[e][f];
+    let c = this.hidden_layer.calc(b),
+      d = [];
+    for (let e = 0; e < this.output_weights[0].length; e++) d[e] = 0;
+    for (let e = 0; e < this.output_weights.length; e++)
+      for (let f = 0; f < this.output_weights[e].length; f++) d[f] += c[e] * this.output_weights[e][f];
+    for (let e = 0; e < d.length; e++) d[e] = this.output_fun(d[e]);
+    return d
   }
 }

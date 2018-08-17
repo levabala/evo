@@ -45,7 +45,7 @@ class VisualizerSVG {
 
     this._drawBackground();
     //this._drawNet();
-    this._createCells();
+    //this._createCells();
 
     /*setTimeout(function () {
       this.auto_scale()
@@ -55,7 +55,7 @@ class VisualizerSVG {
     //start redrawing cycle
     this._updateSize();
     this._update_creatures();
-    this._update_cells();
+    //this._update_cells();
     this.auto_scale();
     this._resize_main_div();
     this._addWheelScaling();
@@ -88,7 +88,7 @@ class VisualizerSVG {
     const scrollSensitivity = 0.1;
     let x = 0;
     let y = 0;
-    this.main_nest.node.addEventListener("mousewheel", function (e) {
+    this.div.addEventListener("mousewheel", function (e) {
       clearTimeout(this._scale_timeout);
       if (!this._scaling) {
         this.dispatchEvent("scaling_start");
@@ -114,7 +114,7 @@ class VisualizerSVG {
 
     let jq_nest = $(this.div);
     this._div_offset = jq_nest.offset();
-    this.main_nest.node.addEventListener("mousemove", function (evt) {
+    this.div.addEventListener("mousemove", function (evt) {
       x = evt.pageX - this._div_offset.left;
       y = evt.pageY - this._div_offset.top;
     }.bind(this));
@@ -302,6 +302,10 @@ class VisualizerSVG {
 
   _drawBackground() {
     this.main_group.clear();
+    this.main_group.rect(this.map.width, this.map.height).stroke({
+      color: "white",
+      width: 0.1
+    });
   }
 
   _drawNet() {
