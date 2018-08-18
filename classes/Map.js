@@ -1,5 +1,5 @@
 class SimMap {
-  constructor(width, height, fertility_base = 0.0001, fertility_range = 0.00000) {
+  constructor(width, height, fertility_base = 0.00001, fertility_range = 0.00000) {
     //add reactor
     Reactor.apply(this, []);
 

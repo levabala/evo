@@ -80,8 +80,6 @@ class VisualizerCanvas {
   updateTranfsorm() {
     for (let context of this.contextes)
       this._applyMatrix(context);
-
-    this.renderAll();
   }
 
   _updateMatrix() {
@@ -111,11 +109,11 @@ class VisualizerCanvas {
       context.clearRect(-1, -1, this.width + 1, this.height + 1);
   }
 
-  renderAll() {
-    this._render_background();
-    //this._render_net();
-    this._render_cells();
-    this._render_creatures();
+  renderAll(force = false) {
+    this._render_background(force);
+    //this._render_net(force);
+    this._render_cells(force);
+    this._render_creatures(force);
   }
 
   render() {
@@ -152,9 +150,10 @@ class VisualizerCanvas {
     ctx.stroke();
   }
 
-  _render_cells() {
+  _render_cells(force) {
     let ctx = this.context_cells;
-    ctx.clearRect(0, 0, this.width, this.height);
+    if (force)
+      ctx.clearRect(0, 0, this.width, this.height);
 
     let offset = 1;
     let start_x = Math.max(this._view_box.x1 - offset, 0);
@@ -165,9 +164,16 @@ class VisualizerCanvas {
     for (var x = start_x; x < end_x; x++) {
       for (var y = start_y; y < end_y; y++) {
         let cell = this.map.cells[x][y];
+        let old_food_amount = cell._last_drawed_food_amount
+        let new_food_amount = cell.food_amount;
+        if (!force && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1)
+          continue;
+
         let color = this._generateCellColor(cell);
         ctx.fillStyle = color;
+        ctx.clearRect(x, y, 1, 1);
         ctx.fillRect(x, y, 1, 1);
+        cell._last_drawed_food_amount = cell.food_amount;
       }
     }
   }
@@ -185,11 +191,12 @@ class VisualizerCanvas {
     let y_range = new Range(start_y - offset, end_y + offset);
 
     for (let creature of Object.values(this.creatures_controller.creatures)) {
-      let color = this._generateCreatureColor(creature);
       let x = creature.coordinates.x;
       let y = creature.coordinates.y;
       if (!x_range.isIn(creature.coordinates.x) || !y_range.isIn(creature.coordinates.y))
         continue;
+
+      let color = this._generateCreatureColor(creature);
       let size = this._getCreatureSize(creature);
       ctx.fillStyle = color;
       ctx.strokeStyle = color;
@@ -241,7 +248,9 @@ class VisualizerCanvas {
         this.dispatchEvent("scaling_start");
         this._scaling = true;
       }
-      this._scale_timeout = setTimeout(() => this.dispatchEvent("scaling_end"), 300);
+      this._scale_timeout = setTimeout(() => {
+        this.dispatchEvent("scaling_end");
+      }, 300);
 
       let evt = window.event || e;
       let scroll = evt.detail ? evt.detail * scrollSensitivity : (evt.wheelDelta / 120) * scrollSensitivity;
@@ -262,6 +271,7 @@ class VisualizerCanvas {
       this.clearAll();
       this._updateViewBox();
       this.updateTranfsorm();
+      this.renderAll(true);
 
       return true;
     }.bind(this), false);
