@@ -15,7 +15,7 @@ var master = new SimMaster(
   creatures_controller, map_controller, 100, 30
 );
 var sim_visualizer =
-  new VisualizerSVG(div_map, map_controller, creatures_controller)
+  new VisualizerCanvas(div_map, map_controller, creatures_controller)
   .addEventListener("scaling_start", () => master.pauseSimulation())
   .addEventListener("scaling_end", () => master.continueSimulation());
 
