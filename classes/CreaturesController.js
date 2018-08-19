@@ -26,7 +26,7 @@ class CreaturesController {
     this.PROCESS_CELL_EVENT = "process_cell";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.00001;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.00002;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;

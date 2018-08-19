@@ -207,9 +207,14 @@ class VisualizerCanvas {
   }
 
   _generateCellColor(cell) {
+    const additional_food_coeff = 0.7;
+    let additional_food = cell.MAX_FOOD_AMOUNT * additional_food_coeff;
     let hue = Math.round(cell.food_type * 360);
     let sat = 20;
-    let light = Math.round(cell.food_amount / cell.MAX_FOOD_AMOUNT * 20);
+    let light =
+      Math.round(
+        (cell.food_amount + additional_food) / (cell.MAX_FOOD_AMOUNT + additional_food) * 40
+      );
     let color = `hsl(${hue}, ${sat}%, ${light}%)`;
     return color;
   }

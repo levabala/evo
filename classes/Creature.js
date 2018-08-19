@@ -77,6 +77,7 @@ class Creature {
   tick(time) {
     this.age += time;
     this.split_cooldown -= time;
+    this.effectivity = this.satiety_gained / this.age * 1000;
     this._downGradeFatigue(time);
     if (this.fatigue <= 0) {
       this._makeAction();
@@ -168,12 +169,11 @@ class Creature {
       type_diff_coeff *
       amount *
       age_modificator
-    if (isNaN(type_diff_coeff))
+    if (isNaN(effect))
       debugger;
     //console.log(`food lost: ${amount - effect}`);
 
-    this.satiety_gained += effect;
-    this.effectivity = this.satiety_gained / this.age * 1000;
+    this.satiety_gained += effect / age_modificator;
     this.satiety = Math.min(this.satiety + effect, 1);
     cell.food_amount -= amount;
     this._register_update();
