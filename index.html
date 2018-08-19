@@ -18,10 +18,11 @@
   <script src="classes/CreaturesController.js"></script>
   <script src="classes/Map.js"></script>
   <script src="classes/MapController.js"></script>
-  <script src="classes/SimVisualizer.js"></script>
+
   <script src="classes/SimMaster.js"></script>
   <script src="classes/SimObserver.js"></script>
   <script src="classes/visualizers/VisualizerSVG.js"></script>
+  <script src="classes/visualizers/VisualizerCanvas.js"></script>
   <script src="classes/Cell.js"></script>
   <script src="classes/Actions.js"></script>
   <script src="classes/NeuralNetwork.js"></script>
@@ -42,15 +43,17 @@
 </head>
 
 <body style="background: black">
-  <div id="div_drawing" style="position: absolute; left: 10px; top: 10px; right: 10px; bottom: 330px;"></div>
-  <div id="div_graph1" style="background: gray; position:absolute; bottom: 170px; height:150px; left: 10px; right: 10px"></div>
-  <div id="div_graph2" style="background: gray; position:absolute; bottom: 10px; height:150px; left: 10px; right: 10px"></div>
-  <div id="div_info" style="position: absolute; bottom: 10px; left: 10px; width: 20%; height: auto; background-color:rgba(255, 255, 255, 0.85); padding: 10px"></div>
-  <input type="range" min=0.7 max=8 class="slider" step=0.1 id="range_sim_speed" style="position: absolute; left: 10px; top: 10px; width: 20%;">
+  <div id="div_drawing" style="position: absolute; left: 10px; top: 10px; right: 10px; bottom: 170px;"></div>
+  <div id="div_graph1" style="background: gray; position:absolute; bottom: 85px; height:70px; left: 10px; right: 10px"></div>
+  <div id="div_graph2" style="background: gray; position:absolute; bottom: 10px; height:70px; left: 10px; right: 10px"></div>
+  <div id="div_info" style="position: absolute; z-index: 100; bottom: 10px; left: 10px; width: 200px; height: auto; background-color:rgba(255, 255, 255, 0.85); padding: 10px"></div>
+  <input type="range" min=0.7 max=15 class="slider" step=0.1 id="range_sim_speed" style="position: absolute; left: 10px; top: 10px; width: 20%; z-index: 100;">
+  <div id="div_fps" style="position: absolute; z-index: 100; right: 10px; top: 10px; font-weight: bold; color: white">FPS: 0</div>
   <script src=" main.js "></script>
   <script>
     //interface script
-    var div_graph = document.getElementById("div_graph ");
+    var div_fps = document.getElementById("div_fps");
+    setInterval(() => div_fps.innerHTML = `FPS: ${window.FPS}`, 300);
   </script>
 </body>
 

@@ -17,7 +17,7 @@ class CreaturesController {
     //constants    
     this.MINIMAL_CREATURES_DENSITY = 0.005; //0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
-    this.AFTER_SPLIT_SATIETY = 0.5;
+    this.SPLIT_COST = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
     this.NEW_CREATURE_EVENT = "new_creature";
     this.DEAD_CREATURE_EVENT = "deawd_creature";
@@ -26,13 +26,14 @@ class CreaturesController {
     this.PROCESS_CELL_EVENT = "process_cell";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.0001;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.00002;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
     this.NEW_CREATURE_FOOD_VARIETY = -0.47;
-    this.NEW_CREATURE_MAX_AGE = 100 * 1000;
+    this.NEW_CREATURE_MAX_AGE = 200 * 1000;
+    this.MOVE_COST = 0.01;
 
     //other
     this.debug = false;
@@ -121,9 +122,13 @@ class CreaturesController {
   viewZoneGetter(pos) {
     let view_zone = {
       left: this.map.cellAtPoint(pos.clone().move(-1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      left2: this.map.cellAtPoint(pos.clone().move(-2, 0)).update(this.last_tick_timecode, this.sim_speed),
       right: this.map.cellAtPoint(pos.clone().move(1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      right2: this.map.cellAtPoint(pos.clone().move(2, 0)).update(this.last_tick_timecode, this.sim_speed),
       top: this.map.cellAtPoint(pos.clone().move(0, -1)).update(this.last_tick_timecode, this.sim_speed),
+      top2: this.map.cellAtPoint(pos.clone().move(0, -2)).update(this.last_tick_timecode, this.sim_speed),
       bottom: this.map.cellAtPoint(pos.clone().move(0, 1)).update(this.last_tick_timecode, this.sim_speed),
+      bottom2: this.map.cellAtPoint(pos.clone().move(0, 2)).update(this.last_tick_timecode, this.sim_speed),
       center: this.map.cells[pos.x][pos.y].update(this.last_tick_timecode, this.sim_speed)
     };
 
@@ -176,7 +181,7 @@ class CreaturesController {
     this._processNewCreature(new_creature);
     this.addCreature(new_creature);
 
-    creature.satiety = this.AFTER_SPLIT_SATIETY;
+    creature.satiety -= this.SPLIT_COST;
   }
 
   _checkCreaturesLimit() {
@@ -293,6 +298,9 @@ class CreaturesController {
     let cell = this.map.cells[new_position.x][new_position.y];
     cell.walking_creatures[creature.id] = creature;
 
+    //downgrade satiety
+    creature.satiety -= this.MOVE_COST;
+
     //notify controller&visualizer
     this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);
   }
@@ -305,11 +313,19 @@ class CreaturesController {
   }
 
   _generateActionNet() {
-    //input: viewzone(5 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
     //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],
@@ -335,11 +351,19 @@ class CreaturesController {
   }
 
   _generateMoveNet() {
-    //input: viewzone(5 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
     //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],

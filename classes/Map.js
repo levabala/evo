@@ -1,5 +1,5 @@
 class SimMap {
-  constructor(width, height, fertility_base = 0.0001, fertility_range = 0.00000) {
+  constructor(width, height, fertility_base = 0.000005, fertility_range = 0.00000) {
     //add reactor
     Reactor.apply(this, []);
 
@@ -25,7 +25,7 @@ class SimMap {
   }
 
   _generateMapPerlin() {
-    const changing = 24;
+    const changing = 64;
     var map = [];
     noise.seed(Math.random());
     var max_food_type = 0;
