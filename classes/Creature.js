@@ -77,6 +77,8 @@ class Creature {
   tick(time) {
     this.age += time;
     this.split_cooldown -= time;
+    if (this.age == 0)
+      debugger;
     this.effectivity = this.satiety_gained / this.age * 1000;
     this._downGradeFatigue(time);
     if (this.fatigue <= 0) {
@@ -136,10 +138,18 @@ class Creature {
       view_zone.bottom ? Math.abs(this.eating_type - view_zone.bottom.food_type) : -1,
       view_zone.left ? Math.abs(this.eating_type - view_zone.left.food_type) : -1,
       view_zone.top ? Math.abs(this.eating_type - view_zone.top.food_type) : -1,
+      view_zone.right2 ? Math.abs(this.eating_type - view_zone.right2.food_type) : -1,
+      view_zone.bottom2 ? Math.abs(this.eating_type - view_zone.bottom2.food_type) : -1,
+      view_zone.left2 ? Math.abs(this.eating_type - view_zone.left2.food_type) : -1,
+      view_zone.top2 ? Math.abs(this.eating_type - view_zone.top2.food_type) : -1,
       view_zone.right ? view_zone.right.food_amount : -1,
       view_zone.bottom ? view_zone.bottom.food_amount : -1,
       view_zone.left ? view_zone.left.food_amount : -1,
       view_zone.top ? view_zone.top.food_amount : -1,
+      view_zone.right2 ? view_zone.right2.food_amount : -1,
+      view_zone.bottom2 ? view_zone.bottom2.food_amount : -1,
+      view_zone.left2 ? view_zone.left2.food_amount : -1,
+      view_zone.top2 ? view_zone.top2.food_amount : -1,
       Math.abs(this.eating_type - view_zone.center.food_type),
       view_zone.center.food_amount,
       this.satiety

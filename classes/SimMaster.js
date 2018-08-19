@@ -11,7 +11,7 @@ class SimMaster {
     this.last_tick_duration = 0;
     this.ticks_counter = 0;
     this.launch_time = Date.now();
-    this.targered_sim_speed = 0;
+    this.targered_sim_speed = sim_speed;
     this.sim_time = 0;
     this.debug = false;
     this.paused = false;
@@ -122,11 +122,11 @@ class SimMaster {
         this._sim_speed
       );
 
-    if (this.last_tick_duration > 500)
-      this.silentSimSpeed(this.sim_speed * 0.5);
+    if (this.last_tick_duration > 400)
+      this.silentSimSpeed(this.sim_speed * 0.7);
     else
-    if (this.last_tick_duration < 300 && this.sim_speed < this.targered_sim_speed)
-      this.silentSimSpeed(Math.min(this.sim_speed * 1.1, this.targered_sim_speed));
+    if (this.last_tick_duration < 100 && this.sim_speed < this.targered_sim_speed)
+      this.silentSimSpeed(Math.min(this.sim_speed * 1.01, this.targered_sim_speed));
 
     this.dispatchEvent("tick_end");
     this.ticks_counter++;

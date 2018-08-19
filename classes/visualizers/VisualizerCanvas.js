@@ -18,6 +18,7 @@ class VisualizerCanvas {
         this._removeCreature.bind(this)
       );
     this.map = map_contoller.map;
+    this.creatures_drawed = {};
 
     //initializer canvases
     this.canvas_background = document.createElement("canvas");
@@ -48,10 +49,10 @@ class VisualizerCanvas {
     //for drawing
     this.render_interval = 100;
     this.matrix = {
-      a: 0,
+      a: 1,
       b: 0,
       c: 0,
-      d: 0,
+      d: 1,
       e: 0,
       f: 0
     }
@@ -79,6 +80,7 @@ class VisualizerCanvas {
     this._updateMatrix();
     this.updateTranfsorm();
     this._addWheelScaling();
+    this._addKeybindings();
   }
 
   updateTranfsorm() {
@@ -92,7 +94,14 @@ class VisualizerCanvas {
     let scale = Math.min(scale_x, scale_y);
 
     //scaling
-    this.matrix.a = this.matrix.d = scale;
+    this.matrix = {
+      a: scale,
+      b: 0,
+      c: 0,
+      d: scale,
+      e: 0,
+      f: 0
+    }
   }
 
   _applyMatrix(context) {
@@ -105,7 +114,12 @@ class VisualizerCanvas {
   }
 
   _removeCreature(creature) {
-
+    let ctx = this.context_creatures;
+    if (!(creature.id in this.creatures_drawed))
+      return;
+    let drawed = this.creatures_drawed[creature.id];
+    ctx.clearRect(drawed.x, drawed.y, 1, 1);
+    delete this.creatures_drawed[creature.id];
   }
 
   clearAll() {
@@ -113,11 +127,11 @@ class VisualizerCanvas {
       context.clearRect(-1, -1, this.width + 1, this.height + 1);
   }
 
-  renderAll(force = false) {
-    this._render_background(force);
-    //this._render_net(force);
-    this._render_cells(force);
-    this._render_creatures(force);
+  renderAll(forced = false) {
+    this._render_background(forced);
+    //this._render_net(forced);
+    this._render_cells(forced);
+    this._render_creatures(forced);
   }
 
   render() {
@@ -158,10 +172,10 @@ class VisualizerCanvas {
     ctx.restore();
   }
 
-  _render_cells(force) {
+  _render_cells(forced) {
     let ctx = this.context_cells;
     ctx.save();
-    if (force)
+    if (forced)
       ctx.clearRect(0, 0, this.width, this.height);
 
     for (var x = this._x_draw_range.from; x < this._x_draw_range.to; x++) {
@@ -169,7 +183,7 @@ class VisualizerCanvas {
         let cell = this.map.cells[x][y];
         let old_food_amount = cell._last_drawed_food_amount
         let new_food_amount = cell.food_amount;
-        if (!force && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1)
+        if (!forced && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1)
           continue;
 
         let color = this._generateCellColor(cell);
@@ -182,23 +196,54 @@ class VisualizerCanvas {
     ctx.restore();
   }
 
-  _render_creatures() {
+  _render_creatures(forced) {
     let ctx = this.context_creatures;
     ctx.save();
-    ctx.clearRect(0, 0, this.width, this.height);
-
+    //ctx.clearRect(0, 0, this.width, this.height);
+    let skipped = 0;
+    let skipped_position = 0;
     for (let creature of Object.values(this.creatures_controller.creatures)) {
       let x = creature.coordinates.x;
       let y = creature.coordinates.y;
-      if (!this._x_draw_range.isIn(creature.coordinates.x) || !this._y_draw_range.isIn(creature.coordinates.y))
+      if (!this._x_draw_range.isIn(x, true) || !this._y_draw_range.isIn(y, true)) {
+        skipped_position++;
         continue;
+      }
 
-      let color = this._generateCreatureColor(creature);
+      let color =
+        (creature.id in this.creatures_drawed) ?
+        this.creatures_drawed[creature.id].color :
+        this._generateCreatureColor(creature);
       let size = this._getCreatureSize(creature);
+
+      let drawed = this.creatures_drawed[creature.id];
+      let pre_processed = creature.id in this.creatures_drawed;
+      const trigger_move = 1;
+      const trigger_size = 0.1
+      if (!forced && pre_processed &&
+        !(
+          Math.abs(drawed.x - x) >= trigger_move ||
+          Math.abs(drawed.y - y) >= trigger_move ||
+          Math.abs(drawed.size - size) >= trigger_size
+        )) {
+        skipped++;
+        continue;
+      }
+
+      if (pre_processed)
+        ctx.clearRect(drawed.x, drawed.y, 1, 1);
+      this.creatures_drawed[creature.id] = {
+        size: size,
+        color: color,
+        x: x,
+        y: y
+      }
+
       ctx.fillStyle = color;
       ctx.strokeStyle = color;
       ctx.fillRect(x + 0.5 - size / 2, y + 0.5 - size / 2, size, size);
     }
+    //console.log(skipped, skipped_position)
     ctx.restore();
   }
 
@@ -232,7 +277,9 @@ class VisualizerCanvas {
       width: this.width,
       height: this.height
     };
-    let el_matrix = new SVG.Matrix(this.main_group);
+    let el_matrix = new SVG.Matrix();
+    for (let i in this.matrix)
+      el_matrix[i] = this.matrix[i];
     let zero_point = new SVG.Point(0, 0).transform(el_matrix.inverse());
     let max_point = new SVG.Point(size.width, size.height).transform(el_matrix.inverse());
     this._view_box.x1 = Math.ceil(zero_point.x);
@@ -247,6 +294,20 @@ class VisualizerCanvas {
     let end_y = Math.min(this.map.height, this._view_box.y2 + offset);
     this._x_draw_range = new Range(start_x, end_x);
     this._y_draw_range = new Range(start_y, end_y);
+  }
+
+  _addKeybindings() {
+    window.addEventListener("keypress", function (e) {
+      switch (e.code) {
+        case "KeyR":
+          this._updateMatrix();
+          this.clearAll();
+          this._updateViewBox();
+          this.updateTranfsorm();
+          this.renderAll(true);
+          break;
+      }
+    }.bind(this));
   }
 
   _addWheelScaling() {
