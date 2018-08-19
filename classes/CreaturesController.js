@@ -17,7 +17,7 @@ class CreaturesController {
     //constants    
     this.MINIMAL_CREATURES_DENSITY = 0.005; //0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
-    this.AFTER_SPLIT_SATIETY = 0.5;
+    this.SPLIT_COST = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
     this.NEW_CREATURE_EVENT = "new_creature";
     this.DEAD_CREATURE_EVENT = "deawd_creature";
@@ -26,13 +26,13 @@ class CreaturesController {
     this.PROCESS_CELL_EVENT = "process_cell";
     this.MUTATE_RANGE = new Range(-0.3, 0.3);
     this.BASE_NET_VALUE = 0.1;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.00007;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.00001;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
     this.NEW_CREATURE_FOOD_VARIETY = -0.47;
-    this.NEW_CREATURE_MAX_AGE = 100 * 1000;
+    this.NEW_CREATURE_MAX_AGE = 200 * 1000;
     this.MOVE_COST = 0.01;
 
     //other
@@ -177,7 +177,7 @@ class CreaturesController {
     this._processNewCreature(new_creature);
     this.addCreature(new_creature);
 
-    creature.satiety = this.AFTER_SPLIT_SATIETY;
+    creature.satiety -= this.SPLIT_COST;
   }
 
   _checkCreaturesLimit() {

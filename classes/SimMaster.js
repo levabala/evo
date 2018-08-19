@@ -14,6 +14,7 @@ class SimMaster {
     this.targered_sim_speed = 0;
     this.sim_time = 0;
     this.debug = false;
+    this.paused = false;
 
     this.lastTimecode = null;
     this.simulationTimeout = null;
@@ -72,25 +73,30 @@ class SimMaster {
   }
 
   continueSimulation() {
-    this.lastTimecode = Date.now();
-    /*
-        for (let x = 0; x < this.map_controller.map.width; x++)
-          for (let y = 0; y < this.map_controller.map.height; y++)
-            this.map_controller.map.cells[x][y].last_update_timecode = this.lastTimecode - this.map_controller.map.cells[x][y].buffer;
-    */
-    this.simulationTimeout = setTimeout(this.simulationTick.bind(this), 0);
+    this.lastTimecode = this.creatures_controller.last_tick_timecode = Date.now();
+    this.paused = false;
+
+    for (let x = 0; x < this.map_controller.map.width; x++)
+      for (let y = 0; y < this.map_controller.map.height; y++)
+        this.map_controller.map.cells[x][y].last_update_timecode = this.lastTimecode - this.map_controller.map.cells[x][y].buffer;
+
+    this.simulationTick();
   }
 
   pauseSimulation() {
+    clearTimeout(this.simulationTimeout);
+    this.paused = true;
+
     let nowTime = Date.now();
-    /*for (let x = 0; x < this.map_controller.map.width; x++)
+    for (let x = 0; x < this.map_controller.map.width; x++)
       for (let y = 0; y < this.map_controller.map.height; y++)
         this.map_controller.map.cells[x][y].buffer = nowTime - this.map_controller.map.cells[x][y].last_update_timecode;
-    */
-    clearTimeout(this.simulationTimeout);
   }
 
   simulationTick() {
+    if (this.paused)
+      return;
+
     this.dispatchEvent("tick_start");
 
     var nowTime = Date.now();
@@ -116,11 +122,6 @@ class SimMaster {
         this._sim_speed
       );
 
-    var nextTickDelay = Math.max(this._tick_interval - (Date.now() - nowTime), 10);
-    this.simulationTimeout = setTimeout(this.simulationTick.bind(this), nextTickDelay);
-
-    this.lastTimecode = nowTime;
-    this.last_tick_duration = Date.now() - nowTime;
     if (this.last_tick_duration > 500)
       this.silentSimSpeed(this.sim_speed * 0.5);
     else
@@ -132,5 +133,11 @@ class SimMaster {
 
     if (this.debug && this.ticks_counter % 500 == 0)
       console.clear();
+
+    var nextTickDelay = Math.max(this._tick_interval - (Date.now() - nowTime), 10);
+    this.simulationTimeout = setTimeout(this.simulationTick.bind(this), nextTickDelay);
+
+    this.lastTimecode = nowTime;
+    this.last_tick_duration = Date.now() - nowTime;
   }
 }

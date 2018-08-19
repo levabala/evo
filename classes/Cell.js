@@ -19,7 +19,6 @@ class Cell {
   }
 
   update(timecode, sim_speed) {
-    let real_delta = timecode - this.last_update_timecode;
     let delta = (timecode - this.last_update_timecode) * sim_speed;
     this.last_update_timecode = Math.max(timecode, this.last_update_timecode);
 

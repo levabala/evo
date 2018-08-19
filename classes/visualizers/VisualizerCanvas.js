@@ -64,10 +64,14 @@ class VisualizerCanvas {
       y1: 0,
       y2: Number.MAX_SAFE_INTEGER
     }
+    this._x_draw_range = new Range(this._view_box.x1, this._view_box.x2);
+    this._y_draw_range = new Range(this._view_box.y1, this._view_box.y2);
 
     //events
     this.registerEvent("scaling_start");
     this.registerEvent("scaling_end");
+
+    this._updateViewBox();
 
     //start render loop
     this.render();
@@ -85,7 +89,7 @@ class VisualizerCanvas {
   _updateMatrix() {
     let scale_x = this.width / (this.map.width + 1);
     let scale_y = this.height / (this.map.height + 1);
-    let scale = Math.max(scale_x, scale_y);
+    let scale = Math.min(scale_x, scale_y);
 
     //scaling
     this.matrix.a = this.matrix.d = scale;
@@ -125,15 +129,18 @@ class VisualizerCanvas {
 
   _render_background() {
     let ctx = this.context_background;
+    ctx.save();
     ctx.clearRect(0, 0, this.width, this.height);
     ctx.globalAlpha = 0.7;
     ctx.strokeStyle = "darkgray"
     ctx.lineWidth = 0.1;
     ctx.strokeRect(0, 0, this.map.width, this.map.height);
+    ctx.restore();
   }
 
   _render_net() {
     let ctx = this.context_net;
+    ctx.save();
     ctx.clearRect(0, 0, this.width, this.height);
     ctx.beginPath();
     ctx.lineWidth = 0.01;
@@ -148,21 +155,17 @@ class VisualizerCanvas {
     }
     ctx.closePath();
     ctx.stroke();
+    ctx.restore();
   }
 
   _render_cells(force) {
     let ctx = this.context_cells;
+    ctx.save();
     if (force)
       ctx.clearRect(0, 0, this.width, this.height);
 
-    let offset = 1;
-    let start_x = Math.max(this._view_box.x1 - offset, 0);
-    let end_x = Math.min(this.map.width, this._view_box.x2 + offset);
-    let start_y = Math.max(this._view_box.y1 - offset, 0);
-    let end_y = Math.min(this.map.height, this._view_box.y2 + offset);
-
-    for (var x = start_x; x < end_x; x++) {
-      for (var y = start_y; y < end_y; y++) {
+    for (var x = this._x_draw_range.from; x < this._x_draw_range.to; x++) {
+      for (var y = this._y_draw_range.from; y < this._y_draw_range.to; y++) {
         let cell = this.map.cells[x][y];
         let old_food_amount = cell._last_drawed_food_amount
         let new_food_amount = cell.food_amount;
@@ -176,24 +179,18 @@ class VisualizerCanvas {
         cell._last_drawed_food_amount = cell.food_amount;
       }
     }
+    ctx.restore();
   }
 
   _render_creatures() {
     let ctx = this.context_creatures;
+    ctx.save();
     ctx.clearRect(0, 0, this.width, this.height);
-
-    let start_x = Math.max(this._view_box.x1, 0);
-    let end_x = Math.min(this.map.width, this._view_box.x2);
-    let start_y = Math.max(this._view_box.y1, 0);
-    let end_y = Math.min(this.map.height, this._view_box.y2);
-    let offset = 3;
-    let x_range = new Range(start_x - offset, end_x + offset);
-    let y_range = new Range(start_y - offset, end_y + offset);
 
     for (let creature of Object.values(this.creatures_controller.creatures)) {
       let x = creature.coordinates.x;
       let y = creature.coordinates.y;
-      if (!x_range.isIn(creature.coordinates.x) || !y_range.isIn(creature.coordinates.y))
+      if (!this._x_draw_range.isIn(creature.coordinates.x) || !this._y_draw_range.isIn(creature.coordinates.y))
         continue;
 
       let color = this._generateCreatureColor(creature);
@@ -202,6 +199,7 @@ class VisualizerCanvas {
       ctx.strokeStyle = color;
       ctx.fillRect(x + 0.5 - size / 2, y + 0.5 - size / 2, size, size);
     }
+    ctx.restore();
   }
 
   _getCreatureSize(creature) {
@@ -236,6 +234,14 @@ class VisualizerCanvas {
     this._view_box.y1 = Math.ceil(zero_point.y);
     this._view_box.x2 = Math.ceil(max_point.x);
     this._view_box.y2 = Math.ceil(max_point.y);
+
+    let offset = 2;
+    let start_x = Math.max(this._view_box.x1 - offset, 0);
+    let end_x = Math.min(this.map.width, this._view_box.x2 + offset);
+    let start_y = Math.max(this._view_box.y1 - offset, 0);
+    let end_y = Math.min(this.map.height, this._view_box.y2 + offset);
+    this._x_draw_range = new Range(start_x, end_x);
+    this._y_draw_range = new Range(start_y, end_y);
   }
 
   _addWheelScaling() {
@@ -250,6 +256,7 @@ class VisualizerCanvas {
       }
       this._scale_timeout = setTimeout(() => {
         this.dispatchEvent("scaling_end");
+        this._scaling = false;
       }, 300);
 
       let evt = window.event || e;
@@ -259,15 +266,13 @@ class VisualizerCanvas {
         matrix[i] = this.matrix[i];
       let pointer = new SVG.Point(x, y).transform(matrix.inverse());
       let old_scale = this.matrix.a;
-      let new_scale = old_scale * (1 + scroll); //old_scale + scroll;
+      let new_scale = old_scale * (1 + scroll);
       let coeff = new_scale / old_scale;
       let new_matrix = matrix.scale(coeff, pointer.x, pointer.y);
-      //console.log(pointer, x, y)
 
       for (let i in this.matrix)
         this.matrix[i] = new_matrix[i];
 
-      //this._updateMatrix();
       this.clearAll();
       this._updateViewBox();
       this.updateTranfsorm();

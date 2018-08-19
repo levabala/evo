@@ -25,7 +25,7 @@ class SimMap {
   }
 
   _generateMapPerlin() {
-    const changing = 24;
+    const changing = 64;
     var map = [];
     noise.seed(Math.random());
     var max_food_type = 0;

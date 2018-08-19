@@ -10,7 +10,7 @@ class EvoStimulator {
     this.next_stimulate_timeout = this.sim_master.lastTimecode;
 
     //constants
-    this.CREATURES_DENSITY_TRIGGER = 0.1;
+    this.CREATURES_DENSITY_TRIGGER = 0.03;
     this.CREATURES_DENSITY_LOW_TRIGGER = 0.007;
     this.FOOD_VARIETY_ADDITION = -0.001;
     this.FOOD_VARIETY_ADDITION_COEFF = 1.01;

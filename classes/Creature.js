@@ -20,6 +20,7 @@ class Creature {
     this.food_variety = food_variety;
     this.max_age = max_age;
     this.effectivity = 0;
+    this.split_cooldown = 0;
 
     //neural networks
     this.action_net = action_net;
@@ -28,7 +29,8 @@ class Creature {
     //constants    
     this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
-    this.SPLIT_SATIETY_NEEDED = 0.8;
+    this.SPLIT_SATIETY_NEEDED = 0.9;
+    this.SPLIT_MIN_INTERVAL = 5000;
     this.FOOD_MULTIPLITER = 1;
     this.ACTION_COST = 1;
 
@@ -74,6 +76,7 @@ class Creature {
 
   tick(time) {
     this.age += time;
+    this.split_cooldown -= time;
     this._downGradeFatigue(time);
     if (this.fatigue <= 0) {
       this._makeAction();
@@ -86,7 +89,7 @@ class Creature {
   }
 
   _checkForSplit() {
-    if (this.satiety >= this.SPLIT_SATIETY_NEEDED)
+    if (this.satiety >= this.SPLIT_SATIETY_NEEDED && this.split_cooldown <= 0)
       this.split();
   }
 
@@ -108,6 +111,7 @@ class Creature {
 
   split() {
     this.dispatchEvent("wanna_split");
+    this.split_cooldown = this.SPLIT_MIN_INTERVAL;
   }
 
   move_decide() {
