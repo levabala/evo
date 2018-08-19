@@ -122,9 +122,13 @@ class CreaturesController {
   viewZoneGetter(pos) {
     let view_zone = {
       left: this.map.cellAtPoint(pos.clone().move(-1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      left2: this.map.cellAtPoint(pos.clone().move(-2, 0)).update(this.last_tick_timecode, this.sim_speed),
       right: this.map.cellAtPoint(pos.clone().move(1, 0)).update(this.last_tick_timecode, this.sim_speed),
+      right2: this.map.cellAtPoint(pos.clone().move(2, 0)).update(this.last_tick_timecode, this.sim_speed),
       top: this.map.cellAtPoint(pos.clone().move(0, -1)).update(this.last_tick_timecode, this.sim_speed),
+      top2: this.map.cellAtPoint(pos.clone().move(0, -2)).update(this.last_tick_timecode, this.sim_speed),
       bottom: this.map.cellAtPoint(pos.clone().move(0, 1)).update(this.last_tick_timecode, this.sim_speed),
+      bottom2: this.map.cellAtPoint(pos.clone().move(0, 2)).update(this.last_tick_timecode, this.sim_speed),
       center: this.map.cells[pos.x][pos.y].update(this.last_tick_timecode, this.sim_speed)
     };
 
@@ -309,11 +313,19 @@ class CreaturesController {
   }
 
   _generateActionNet() {
-    //input: viewzone(5 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
     //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],
@@ -339,11 +351,19 @@ class CreaturesController {
   }
 
   _generateMoveNet() {
-    //input: viewzone(5 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
     //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],

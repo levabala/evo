@@ -12,7 +12,7 @@ var map = new SimMap(Math.floor(size * coeff_x), Math.floor(size * coeff_y));
 var map_controller = new MapController(map);
 var creatures_controller = new CreaturesController(map);
 var master = new SimMaster(
-  creatures_controller, map_controller, 100, 30
+  creatures_controller, map_controller, 100, 140
 );
 var sim_visualizer =
   new VisualizerCanvas(div_map, map_controller, creatures_controller)
@@ -25,8 +25,9 @@ var info_box = new InfoBox(div_info);
 let power = 2;
 range_sim_speed.value = Math.pow(master.sim_speed, 1 / power);
 range_sim_speed.oninput = function () {
-  if (!range_sim_speed.revert_set)
+  if (!range_sim_speed.revert_set) {
     master.sim_speed = Math.pow(this.value, power);
+  }
 }
 range_sim_speed.onmousemove = () => {
   range_sim_speed.revert_set = false;
