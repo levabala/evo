@@ -181,6 +181,7 @@ class Creature {
       age_modificator
     if (isNaN(effect))
       debugger;
+    effect = Math.min(this.satiety, effect);
     //console.log(`food lost: ${amount - effect}`);
 
     this.satiety_gained += effect / age_modificator;
