@@ -24,8 +24,8 @@ class CreaturesController {
     this.MOVE_CREATURE_EVENT = "move_creature";
     this.MOVE_CREATURES_EVENT = "move_creatures";
     this.PROCESS_CELL_EVENT = "process_cell";
-    this.MUTATE_RANGE = new Range(-0.3, 0.3);
-    this.BASE_NET_VALUE = 0.1;
+    this.START_MUTATE_RANGE = new Range(-0.5, 0.5);
+    this.BASE_NET_VALUE = 0;
     this.CREATURE_SATIETY_DOWNGRADE = 0.00002;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
@@ -34,9 +34,13 @@ class CreaturesController {
     this.NEW_CREATURE_FOOD_VARIETY = -0.47;
     this.NEW_CREATURE_MAX_AGE = 200 * 1000;
     this.MOVE_COST = 0.01;
+    this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL = 0.0003;
+    this.MAX_NEW_CREATURES_AT_ONCE = 1000000;
 
     //other
     this.debug = false;
+    this.new_creature_buffer = 0;
+    this.new_random_creautures_created = 0;
     this._time_buffer_1 = 0;
     this._time_buffer_2 = 0;
 
@@ -54,7 +58,7 @@ class CreaturesController {
     let real_delta = timecode - this.last_tick_timecode;
     let sim_delta = real_delta * sim_speed;
 
-    this._auto_add_creatures();
+    this._auto_add_creatures(0);
     let creatures = Object.values(this.creatures);
     let max_actions_count = creatures.reduce(
       (max_count, creature) => {
@@ -82,6 +86,7 @@ class CreaturesController {
     //console.log("real time per tick:", real_time_per_tick);
     //console.log("sim time per tick:", sim_time_per_tick);
     for (let i = 0; i < max_actions_count; i++) {
+      this._auto_add_creatures(sim_time_per_tick);
       this._internal_tick(sim_time_per_tick);
       this.last_tick_timecode += real_time_per_tick;
     }
@@ -90,7 +95,13 @@ class CreaturesController {
     return true;
   }
 
-  _auto_add_creatures() {
+  _auto_add_creatures(time) {
+    this.new_creature_buffer += time / 1000 * (this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL * this.map.width * this.map.height);
+    this.new_creature_buffer = Math.min(this.MAX_NEW_CREATURES_AT_ONCE, this.new_creature_buffer);
+    while (this.new_creature_buffer > 1) {
+      this._generateAndAddCreature();
+      this.new_creature_buffer--;
+    }
     while (this._checkCreaturesLimit()) {}
   }
 
@@ -101,7 +112,7 @@ class CreaturesController {
 
     //all creatures tick
     let creatures = Object.values(this.creatures);
-    for (var creature of creatures) {
+    for (let creature of creatures) {
       creature.tick(time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
@@ -347,7 +358,7 @@ class CreaturesController {
       ),
       PROCESS_FUNCTIONS.Lineral,
       PROCESS_FUNCTIONS.Lineral_OneLimited
-    ).mutate(this.MUTATE_RANGE);
+    ).mutate(this.START_MUTATE_RANGE);
   }
 
   _generateMoveNet() {
@@ -385,6 +396,6 @@ class CreaturesController {
       ),
       PROCESS_FUNCTIONS.Lineral,
       PROCESS_FUNCTIONS.Lineral_OneLimited
-    ).mutate(this.MUTATE_RANGE);
+    ).mutate(this.START_MUTATE_RANGE);
   }
 }
