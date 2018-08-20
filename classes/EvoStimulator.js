@@ -40,9 +40,11 @@ class EvoStimulator {
       } else
       if (this.sim_master.creatures_controller.creatures_density <= this.CREATURES_DENSITY_LOW_TRIGGER) {
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY -= this.FOOD_VARIETY_ADDITION;
+        let last = this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY;
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
           Math.min(this.FOOD_VARIETY_MIN, this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY);
-        console.warn("NEED DOWN STIMULATE");
+        if (this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY != this.FOOD_VARIETY_MIN)
+          console.warn("NEED DOWN STIMULATE");
       }
       this.next_stimulate_timeout = this.sim_master.lastTimecode + this.stimulate_interval / this.sim_master.sim_speed;
     }

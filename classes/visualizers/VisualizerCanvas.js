@@ -29,7 +29,7 @@ class VisualizerCanvas {
     this.canvas_net.id = "canvas_net";
     this.canvas_cells.id = "canvas_cells";
     this.canvas_creatures.id = "canvas_creatures";
-    let canvases = [this.canvas_background, this.canvas_net, this.canvas_cells, this.canvas_creatures];
+    this.canvases = [this.canvas_background, this.canvas_net, this.canvas_cells, this.canvas_creatures];
 
     this.context_background = this.canvas_background.getContext("2d");
     this.context_net = this.canvas_net.getContext("2d");
@@ -38,7 +38,7 @@ class VisualizerCanvas {
     this.contextes = [this.context_background, this.context_net, this.context_cells, this.context_creatures];
 
     let z_index = 0;
-    for (let canvas of canvases) {
+    for (let canvas of this.canvases) {
       canvas.setAttribute("style", `position: absolute; z-index: ${z_index++}`);
       canvas.setAttribute("width", this.width);
       canvas.setAttribute("height", this.height);
@@ -77,7 +77,7 @@ class VisualizerCanvas {
     //start render loop
     this.render();
 
-    this._updateMatrix();
+    this._autoAdjust();
     this.updateTranfsorm();
     this._addWheelScaling();
     this._addKeybindings();
@@ -88,7 +88,9 @@ class VisualizerCanvas {
       this._applyMatrix(context);
   }
 
-  _updateMatrix() {
+  _autoAdjust() {
+    this.width = this.jq_div.width();
+    this.height = this.jq_div.height();
     let scale_x = this.width / (this.map.width + 1);
     let scale_y = this.height / (this.map.height + 1);
     let scale = Math.min(scale_x, scale_y);
@@ -101,6 +103,12 @@ class VisualizerCanvas {
       d: scale,
       e: 0,
       f: 0
+    }
+
+    //canvas adjusting
+    for (let canvas of this.canvases) {
+      canvas.setAttribute("width", this.width);
+      canvas.setAttribute("height", this.height);
     }
   }
 
@@ -287,7 +295,7 @@ class VisualizerCanvas {
     this._view_box.x2 = Math.ceil(max_point.x);
     this._view_box.y2 = Math.ceil(max_point.y);
 
-    let offset = 2;
+    let offset = 1;
     let start_x = Math.max(this._view_box.x1 - offset, 0);
     let end_x = Math.min(this.map.width, this._view_box.x2 + offset);
     let start_y = Math.max(this._view_box.y1 - offset, 0);
@@ -300,7 +308,7 @@ class VisualizerCanvas {
     window.addEventListener("keypress", function (e) {
       switch (e.code) {
         case "KeyR":
-          this._updateMatrix();
+          this._autoAdjust();
           this.clearAll();
           this._updateViewBox();
           this.updateTranfsorm();
