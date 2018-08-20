@@ -25,27 +25,53 @@ class SimMap {
   }
 
   _generateMapPerlin() {
-    const changing = 64;
-    var map = [];
+    map = [];
+
+    const changing_sea_rate = 192;
+    let sea_rate_map = this._createPerlinMap(changing_sea_rate);
+
+    const changing_sea = 16;
+    let sea_map = this._createPerlinMap(changing_sea);
+
+    const changing_food = 64;
+    const sea_level = 0.4;
+    let food_map = this._createPerlinMap(changing_food);
+    for (var x = 0; x < this.width; x++) {
+      map.push([]);
+      for (var y = 0; y < this.height; y++) {
+        let is_sea = sea_map[x][y] > (1 - sea_rate_map[x][y] * sea_level); //sea_rate_map);                     
+        map[x][y] = new Cell(
+          new P(x, y), !is_sea ? this.fertility_base + (Math.random() - 1) * 2 * this.fertility_range : 0, !is_sea ? food_map[x][y] : -1,
+          is_sea
+        );
+      }
+    }
+
+    return map;
+  }
+
+  _createPerlinMap(changing) {
+    let map = [];
     noise.seed(Math.random());
-    var max_food_type = 0;
+    var max = Number.MIN_SAFE_INTEGER;
+    var min = Number.MAX_SAFE_INTEGER;
     for (var x = 0; x < this.width; x++) {
       map.push([]);
       for (var y = 0; y < this.height; y++) {
         let val = noise.perlin2(x / changing, y / changing);
         let food_type = (val + 0.5) / 2;
-        max_food_type = Math.max(food_type, max_food_type);
-        map[x][y] = new Cell(
-          new P(x, y),
-          this.fertility_base + (Math.random() - 1) * 2 * this.fertility_range,
-          food_type
-        );
+        max = Math.max(food_type, max);
+        min = Math.min(food_type, min);
+        map[x][y] = food_type;
       }
     }
-    var coeff = 1 / max_food_type;
+
+    max -= min;
+    var coeff = 1 / max;
     for (var x = 0; x < this.width; x++)
       for (var y = 0; y < this.height; y++) {
-        map[x][y].food_type *= coeff;
+        map[x][y] -= min
+        map[x][y] *= coeff;
       }
 
     return map;

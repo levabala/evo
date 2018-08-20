@@ -1,6 +1,6 @@
 class Cell {
   constructor(
-    coordinates, fertility = 0.1, food_type = Math.random(), toxicity = 0,
+    coordinates, fertility = 0.1, food_type = Math.random(), is_sea = false, toxicity = 0,
     detoxification_rate = 0.1, food_amount = 0) {
 
     this.coordinates = coordinates;
@@ -13,12 +13,14 @@ class Cell {
     this.processed_time = 0;
     this.last_update_timecode = Date.now();
     this.buffer = 0;
+    this.is_sea = is_sea;
 
     //constants
     this.MAX_FOOD_AMOUNT = 0.5;
   }
 
   update(timecode, sim_speed) {
+
     let delta = (timecode - this.last_update_timecode) * sim_speed;
     this.last_update_timecode = Math.max(timecode, this.last_update_timecode);
 

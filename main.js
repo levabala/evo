@@ -43,12 +43,13 @@ setTimeout(function () {
   var sim_observer =
     new SimObserver(master)
     .addEventListener("updates", function () {
+      /*
       plot_population.applyDataSimple(
         _.takeRight(sim_observer.logs.creatures_count, 300)
       );
       plot_generation.applyDataSimple(
         _.takeRight(sim_observer.logs.max_generation, 300)
-      );
+      );*/
     })
     .connectInfoBox(info_box);
 }.bind(this), 500);

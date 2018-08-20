@@ -14,6 +14,7 @@ class SimObserver {
       "sim_time": new Info("Simulation time", 0, (value) => `${Math.round(value / 1000)}sec`),
       "tick_duration": new Info("Tick duration", 0, (value) => `${value}ms`),
       "sim_speed": new Info("Simulation speed", 0, (value) => `x${value}`),
+      "creature_max_id": new Info("Max id", 0, (value) => `#${value}`),
       "creatures_count": new Info("Creatures count", 0),
       "creatures_density": new Info("Creatures density", 0),
       "max_generation": new Info("Max generation", 0),
@@ -45,6 +46,7 @@ class SimObserver {
     this.info.real_time.value = this.sim_master.sim_time / this.sim_master.sim_speed;
     this.info.sim_time.value = this.sim_master.sim_time;
     this.info.sim_speed.value = controller.sim_speed;
+    this.info.creature_max_id.value = controller.creatures_counter;
     this.info.creatures_count.value = controller.creatures_count;
     this.info.creatures_density.value = controller.creatures_density;
     this.info.max_generation.value = controller.maximal_generation;

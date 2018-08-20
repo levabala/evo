@@ -134,22 +134,35 @@ class Creature {
   _generateNetInput() {
     let view_zone = this.request_view_zone(this.coordinates);
     return [
-      view_zone.right ? Math.abs(this.eating_type - view_zone.right.food_type) : -1,
-      view_zone.bottom ? Math.abs(this.eating_type - view_zone.bottom.food_type) : -1,
-      view_zone.left ? Math.abs(this.eating_type - view_zone.left.food_type) : -1,
-      view_zone.top ? Math.abs(this.eating_type - view_zone.top.food_type) : -1,
-      view_zone.right2 ? Math.abs(this.eating_type - view_zone.right2.food_type) : -1,
-      view_zone.bottom2 ? Math.abs(this.eating_type - view_zone.bottom2.food_type) : -1,
-      view_zone.left2 ? Math.abs(this.eating_type - view_zone.left2.food_type) : -1,
-      view_zone.top2 ? Math.abs(this.eating_type - view_zone.top2.food_type) : -1,
-      view_zone.right ? view_zone.right.food_amount : -1,
-      view_zone.bottom ? view_zone.bottom.food_amount : -1,
-      view_zone.left ? view_zone.left.food_amount : -1,
-      view_zone.top ? view_zone.top.food_amount : -1,
-      view_zone.right2 ? view_zone.right2.food_amount : -1,
-      view_zone.bottom2 ? view_zone.bottom2.food_amount : -1,
-      view_zone.left2 ? view_zone.left2.food_amount : -1,
-      view_zone.top2 ? view_zone.top2.food_amount : -1,
+      //food type diff
+      Math.abs(this.eating_type - view_zone.right.food_type),
+      Math.abs(this.eating_type - view_zone.bottom.food_type),
+      Math.abs(this.eating_type - view_zone.left.food_type),
+      Math.abs(this.eating_type - view_zone.top.food_type),
+      Math.abs(this.eating_type - view_zone.right2.food_type),
+      Math.abs(this.eating_type - view_zone.bottom2.food_type),
+      Math.abs(this.eating_type - view_zone.left2.food_type),
+      Math.abs(this.eating_type - view_zone.top2.food_type),
+
+      //food amount
+      view_zone.right.food_amount,
+      view_zone.bottom.food_amount,
+      view_zone.left.food_amount,
+      view_zone.top.food_amount,
+      view_zone.right2.food_amount,
+      view_zone.bottom2.food_amount,
+      view_zone.left2.food_amount,
+      view_zone.top2.food_amount,
+
+      //is sea
+      view_zone.right.is_sea ? 1 : 0,
+      view_zone.bottom.is_sea ? 1 : 0,
+      view_zone.left.is_sea ? 1 : 0,
+      view_zone.top.is_sea ? 1 : 0,
+      view_zone.right2.is_sea ? 1 : 0,
+      view_zone.bottom2.is_sea ? 1 : 0,
+      view_zone.left2.is_sea ? 1 : 0,
+      view_zone.top2.is_sea ? 1 : 0,
       Math.abs(this.eating_type - view_zone.center.food_type),
       view_zone.center.food_amount,
       this.satiety

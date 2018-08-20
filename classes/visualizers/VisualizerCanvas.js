@@ -72,15 +72,16 @@ class VisualizerCanvas {
     this.registerEvent("scaling_start");
     this.registerEvent("scaling_end");
 
+    this._autoAdjust();
+    this.clearAll();
     this._updateViewBox();
+    this.updateTranfsorm();
+    this.renderAll(true);
+    this._addWheelScaling();
+    this._addKeybindings();
 
     //start render loop
     this.render();
-
-    this._autoAdjust();
-    this.updateTranfsorm();
-    this._addWheelScaling();
-    this._addKeybindings();
   }
 
   updateTranfsorm() {
@@ -213,19 +214,19 @@ class VisualizerCanvas {
     for (let creature of Object.values(this.creatures_controller.creatures)) {
       let x = creature.coordinates.x;
       let y = creature.coordinates.y;
-      if (!this._x_draw_range.isIn(x, true) || !this._y_draw_range.isIn(y, true)) {
+      let pre_processed = creature.id in this.creatures_drawed;
+      let drawed = this.creatures_drawed[creature.id];
+      if (pre_processed && (!this._x_draw_range.isIn(drawed.x, true) || !this._y_draw_range.isIn(drawed.y, true))) {
         skipped_position++;
         continue;
       }
 
       let color =
-        (creature.id in this.creatures_drawed) ?
+        pre_processed ?
         this.creatures_drawed[creature.id].color :
         this._generateCreatureColor(creature);
       let size = this._getCreatureSize(creature);
 
-      let drawed = this.creatures_drawed[creature.id];
-      let pre_processed = creature.id in this.creatures_drawed;
       const trigger_move = 1;
       const trigger_size = 0.1
       if (!forced && pre_processed &&
@@ -260,6 +261,9 @@ class VisualizerCanvas {
   }
 
   _generateCellColor(cell) {
+    if (cell.is_sea) {
+      return "#4d94ff";
+    }
     const additional_food_coeff = 0.7;
     let additional_food = cell.MAX_FOOD_AMOUNT * additional_food_coeff;
     let hue = Math.round(cell.food_type * 360);

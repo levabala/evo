@@ -298,9 +298,14 @@ class CreaturesController {
     else if (new_position.y < this.map.VERTICAL_AXIS_RANGE.from)
       new_position.y = this.map.VERTICAL_AXIS_RANGE.to;
 
-    //remove from last cell
-    let previous_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
-    delete previous_cell.walking_creatures[creature.id];
+    let now_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+
+    //check cell for sea
+    if (now_cell.food_type == -1)
+      return false;
+
+    //remove from last cell    
+    delete now_cell.walking_creatures[creature.id];
 
     //update coordinates
     creature.coordinates = new_position;
@@ -324,11 +329,20 @@ class CreaturesController {
   }
 
   _generateActionNet() {
-    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
     //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],
@@ -362,11 +376,20 @@ class CreaturesController {
   }
 
   _generateMoveNet() {
-    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
     //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],
