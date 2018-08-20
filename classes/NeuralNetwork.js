@@ -81,9 +81,10 @@ class NeuralNetwork {
 
   calc(a) {
     let b = [];
+    let input_fun = this.input_fun;
     for (let e = 0; e < this.input_weights[0].length; e++) b[e] = 0;
     for (let e = 0; e < this.input_weights.length; e++)
-      for (let f = 0; f < this.input_weights[e].length; f++) b[f] += this.input_fun(a[e]) * this.input_weights[e][f];
+      for (let f = 0; f < this.input_weights[e].length; f++) b[f] += input_fun(a[e]) * this.input_weights[e][f];
     let c = this.hidden_layer.calc(b),
       d = [];
     for (let e = 0; e < this.output_weights[0].length; e++) d[e] = 0;

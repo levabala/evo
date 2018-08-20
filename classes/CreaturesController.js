@@ -24,8 +24,8 @@ class CreaturesController {
     this.MOVE_CREATURE_EVENT = "move_creature";
     this.MOVE_CREATURES_EVENT = "move_creatures";
     this.PROCESS_CELL_EVENT = "process_cell";
-    this.MUTATE_RANGE = new Range(-0.3, 0.3);
-    this.BASE_NET_VALUE = 0.1;
+    this.START_MUTATE_RANGE = new Range(-0.5, 0.5);
+    this.BASE_NET_VALUE = 0;
     this.CREATURE_SATIETY_DOWNGRADE = 0.00002;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
@@ -347,7 +347,7 @@ class CreaturesController {
       ),
       PROCESS_FUNCTIONS.Lineral,
       PROCESS_FUNCTIONS.Lineral_OneLimited
-    ).mutate(this.MUTATE_RANGE);
+    ).mutate(this.START_MUTATE_RANGE);
   }
 
   _generateMoveNet() {
@@ -385,6 +385,6 @@ class CreaturesController {
       ),
       PROCESS_FUNCTIONS.Lineral,
       PROCESS_FUNCTIONS.Lineral_OneLimited
-    ).mutate(this.MUTATE_RANGE);
+    ).mutate(this.START_MUTATE_RANGE);
   }
 }

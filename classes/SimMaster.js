@@ -20,7 +20,7 @@ class SimMaster {
     this.simulationTimeout = null;
 
     //constants
-    this.MAX_TICK_SIM_TIME = 7000;
+    this.MAX_TICK_SIM_TIME = 3000;
     this.MAP_UPDATE_FREQ = 2; //1 update per 10 ticks
 
     //events
@@ -123,9 +123,9 @@ class SimMaster {
       );
 
     if (this.last_tick_duration > 400)
-      this.silentSimSpeed(this.sim_speed * 0.7);
+      this.silentSimSpeed(5); //this.sim_speed / (this.last_tick_duration / 400 + 1));
     else
-    if (this.last_tick_duration < 100 && this.sim_speed < this.targered_sim_speed)
+    if (this.last_tick_duration < 70 && this.sim_speed < this.targered_sim_speed)
       this.silentSimSpeed(Math.min(this.sim_speed * 1.01, this.targered_sim_speed));
 
     this.dispatchEvent("tick_end");
