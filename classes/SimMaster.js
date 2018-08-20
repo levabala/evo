@@ -129,7 +129,6 @@ class SimMaster {
     if (this.last_tick_duration < 70 && this.sim_speed < this.targered_sim_speed) {
       let a = (1 + 1 / this.last_tick_duration / 70 * 100);
       this.silentSimSpeed(Math.min(this.sim_speed * a, this.targered_sim_speed));
-      debugger
     }
 
     this.dispatchEvent("tick_end");
