@@ -21,8 +21,8 @@ class SimMap {
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
     this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
     this.SEA_RATE_CHANGE_RATE = 0.003;
-    this.SEA_GLOBAL_LEVEL = 0.5;
-    this.SEA_CHANGE_INTERVAL = 1000;
+    this.SEA_GLOBAL_LEVEL = 0.55;
+    this.SEA_CHANGE_INTERVAL_SECS = 10;
 
     //events
     this.registerEvent("sea_changed");
@@ -33,9 +33,9 @@ class SimMap {
 
   checkForChange(time) {
     this.change_sea_timeout -= time;
-    if (this.change_sea_timeout <= 0) {
+    while (this.change_sea_timeout <= 0) {
       this._changeSeaRate(this.SEA_RATE_CHANGE_RATE);
-      this.change_sea_timeout += this.SEA_CHANGE_INTERVAL;
+      this.change_sea_timeout += this.SEA_CHANGE_INTERVAL_SECS * 1000;
     }
   }
 
