@@ -113,7 +113,7 @@ class CreaturesController {
     //all creatures tick
     let creatures = Object.values(this.creatures);
     for (let creature of creatures) {
-      creature.tick(time);
+      creature.tick(creature, time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature);
@@ -207,7 +207,7 @@ class CreaturesController {
 
   _creaturesDensity() {
     let creatures_count = Object.keys(this.creatures).length;
-    let density = creatures_count == 0 ? 0 : creatures_count / this.map.width / this.map.height;
+    let density = creatures_count == 0 ? 0 : creatures_count / (this.map.width * this.map.height - this.map.sea_cells_count);
     this.creatures_density = density;
     return density;
   }
@@ -299,9 +299,10 @@ class CreaturesController {
       new_position.y = this.map.VERTICAL_AXIS_RANGE.to;
 
     let now_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+    let new_cell = this.map.cells[new_position.x][new_position.y];
 
     //check cell for sea
-    if (now_cell.food_type == -1)
+    if (new_cell.is_sea)
       return false;
 
     //remove from last cell    
@@ -310,9 +311,8 @@ class CreaturesController {
     //update coordinates
     creature.coordinates = new_position;
 
-    //add to new one
-    let cell = this.map.cells[new_position.x][new_position.y];
-    cell.walking_creatures[creature.id] = creature;
+    //add to new one    
+    new_cell.walking_creatures[creature.id] = creature;
 
     //downgrade satiety
     creature.satiety -= this.MOVE_COST;

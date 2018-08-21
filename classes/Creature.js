@@ -74,17 +74,27 @@ class Creature {
     return this.ACTION_COST / this.FATIGUE_DONWGRADE;
   }
 
-  tick(time) {
-    this.age += time;
-    this.split_cooldown -= time;
-    if (this.age == 0)
+  tick(ctx, time) {
+    ctx.age += time;
+    ctx.split_cooldown -= time;
+    ctx.effectivity = ctx.satiety_gained / ctx.age * 1000;
+    if (isNaN(ctx.effectivity))
       debugger;
+    ctx._downGradeFatigue(time);
+    if (ctx.fatigue <= 0) {
+      ctx._makeAction();
+      ctx._checkForSplit();
+    }
+    /*this.age += time;
+    this.split_cooldown -= time;
     this.effectivity = this.satiety_gained / this.age * 1000;
+    if (isNaN(this.effectivity))
+      debugger;
     this._downGradeFatigue(time);
     if (this.fatigue <= 0) {
       this._makeAction();
       this._checkForSplit();
-    }
+    }*/
   }
 
   _downGradeFatigue(time) {
@@ -192,12 +202,12 @@ class Creature {
       type_diff_coeff *
       amount *
       age_modificator
-    if (isNaN(effect))
-      debugger;
     effect = Math.min(this.satiety, effect);
     //console.log(`food lost: ${amount - effect}`);
 
-    this.satiety_gained += effect / age_modificator;
+    this.satiety_gained += effect / ((age_modificator == 0) ? 1 : age_modificator);
+    if (isNaN(this.satiety_gained))
+      debugger;
     this.satiety = Math.min(this.satiety + effect, 1);
     cell.food_amount -= amount;
     this._register_update();

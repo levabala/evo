@@ -144,10 +144,12 @@ class VisualizerCanvas {
   }
 
   render() {
+    const binded_render_fun = this.render.bind(this);
     this._render_cells();
     this._render_creatures();
 
-    setTimeout(this.render.bind(this), this.render_interval);
+    window.requestAnimationFrame(binded_render_fun)
+    //setTimeout(this.render.bind(this), this.render_interval);
   }
 
   _render_background() {
@@ -192,14 +194,15 @@ class VisualizerCanvas {
         let cell = this.map.cells[x][y];
         let old_food_amount = cell._last_drawed_food_amount
         let new_food_amount = cell.food_amount;
-        if (!forced && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1)
+        if ((cell._last_drawed_type == cell.is_sea) && !forced && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1)
           continue;
 
         let color = this._generateCellColor(cell);
         ctx.fillStyle = color;
         ctx.clearRect(x, y, 1, 1);
         ctx.fillRect(x, y, 1, 1);
-        cell._last_drawed_food_amount = cell.food_amount;
+        cell._last_drawed_food_amount = new_food_amount;
+        cell._last_drawed_type = cell.is_sea;
       }
     }
     ctx.restore();
