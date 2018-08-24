@@ -2,7 +2,7 @@ class Creature {
   constructor(
     id, coordinates, satiety, toxicity_resistance,
     eating_type, request_view_zone,
-    action_net, move_net, food_variety = -0.483, max_age = 50 * 1000) {
+    control_net, food_variety = -0.483, max_age = 50 * 1000) {
 
     Reactor.apply(this, []);
 
@@ -23,8 +23,7 @@ class Creature {
     this.split_cooldown = 0;
 
     //neural networks
-    this.action_net = action_net;
-    this.move_net = move_net;
+    this.control_net = control_net;
 
     //constants    
     this.FOOD_PER_ACTION = 0.3;
@@ -48,8 +47,7 @@ class Creature {
   }
 
   mutateNets(range) {
-    this.action_net.mutate(range);
-    this.move_net.mutate(range);
+    this.control_net.mutate(range);
     return this;
   }
 
@@ -57,7 +55,7 @@ class Creature {
     return new Creature(
       this.id, this.coordinates.clone(), this.satiety,
       this.toxicity_resistance, this.eating_type, this.request_view_zone,
-      this.action_net.clone(), this.move_net.clone(), this.eating_type, this.max_age
+      this.control_net.clone(), this.eating_type, this.max_age
     );
   }
 
@@ -107,7 +105,7 @@ class Creature {
   }
 
   _makeAction() {
-    let actions_weight = this.action_net.calc(
+    let actions_weight = this.control_net.calc(
       this._generateNetInput()
     );
 
@@ -125,20 +123,6 @@ class Creature {
   split() {
     this.dispatchEvent("wanna_split");
     this.split_cooldown = this.SPLIT_MIN_INTERVAL;
-  }
-
-  move_decide() {
-    let move_weight = this.move_net.calc(
-      this._generateNetInput()
-    );
-
-    //move to the most weightful direction
-    let move_action = ACTIONS_MOVE_MAP[
-      move_weight.indexOf(
-        Math.max(...move_weight)
-      )
-    ];
-    move_action(this);
   }
 
   _generateNetInput() {
