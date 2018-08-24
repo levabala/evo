@@ -270,7 +270,8 @@ class VisualizerCanvas {
     }
     const additional_food_coeff = 0.7;
     let additional_food = cell.MAX_FOOD_AMOUNT * additional_food_coeff;
-    let hue = Math.round(60 + cell.food_type * 300);
+    let hue = Math.round(30 + cell.food_type * 330);
+    //let hue = Math.round(cell.food_type * 360);
     let sat = 20;
     let light =
       Math.round(
@@ -281,7 +282,8 @@ class VisualizerCanvas {
   }
 
   _generateCreatureColor(creature) {
-    let hue = Math.round(60 + creature.eating_type * 300);
+    let hue = Math.round(30 + creature.eating_type * 330);
+    //let hue = Math.round(creature.eating_type * 360);
     let sat = 50;
     let light = Math.round(Math.max(creature.satiety, 0.5) * 100);
     let color = `hsl(${hue}, ${sat}%, ${light}%)`;

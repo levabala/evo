@@ -81,14 +81,21 @@ class NeuralNetwork {
 
   calc(a) {
     let b = [];
-    for (let e = 0; e < this.input_weights[0].length; e++) b[e] = 0;
+    for (let e = 0; e < this.input_weights[0].length; e++)
+      b[e] = 0;
     for (let e = 0; e < this.input_weights.length; e++)
-      for (let f = 0; f < this.input_weights[e].length; f++) b[f] += this.input_fun(a[e]) * this.input_weights[e][f];
+      for (let f = 0; f < this.input_weights[e].length; f++) {
+        b[f] += this.input_fun(a[e]) * this.input_weights[e][f];
+        //if (isNaN(b[f]))
+        //  debugger
+      }
     let c = this.hidden_layer.calc(b),
       d = [];
-    for (let e = 0; e < this.output_weights[0].length; e++) d[e] = 0;
+    for (let e = 0; e < this.output_weights[0].length; e++)
+      d[e] = 0;
     for (let e = 0; e < this.output_weights.length; e++)
-      for (let f = 0; f < this.output_weights[e].length; f++) d[f] += c[e] * this.output_weights[e][f];
+      for (let f = 0; f < this.output_weights[e].length; f++)
+        d[f] += c[e] * this.output_weights[e][f];
     for (let e = 0; e < d.length; e++) d[e] = this.output_fun(d[e]);
     return d
   }

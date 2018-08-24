@@ -236,7 +236,7 @@ class CreaturesController {
       this.NEW_CREATURE_SATIETY,
       this.TOXICIETY_RESISTANCE,
       Math.random(),
-      this.viewZoneGetter.bind(this),
+      this._generateNetInput.bind(this),
       parent_control_net ? parent_control_net : this._generateControlNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
       this.NEW_CREATURE_MAX_AGE
@@ -327,11 +327,16 @@ class CreaturesController {
   }
 
   _generateControlNet() {
-    //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
+    //input: 
+    //+ viewzone(9 cells -> x3(food_type + food_amount + is_sea))
+    //+ satiety 
+    //+ 4 creatures per each direction (x2 -> food_type + satiety)    
     //output: move_up/move_right/move_down/move_left/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        //8 neurons in hidden layer
+        //food type
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -341,6 +346,7 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
+        //food amount
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -350,6 +356,7 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
+        //is sea
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -358,9 +365,24 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
-        [v, v, v, v, v, v, v, v]
+        [v, v, v, v, v, v, v, v],
+
+        //satiety
+        [v, v, v, v, v, v, v, v],
+
+        //creatures food_type
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        //creatures satiety
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
       ], //input
       [
+        //5 outputs & 8 hidden neurons
         [v, v, v, v, v],
         [v, v, v, v, v],
         [v, v, v, v, v],
@@ -376,5 +398,101 @@ class CreaturesController {
       PROCESS_FUNCTIONS.Lineral,
       PROCESS_FUNCTIONS.Lineral_OneLimited
     ).mutate(this.START_MUTATE_RANGE);
+  }
+
+  _generateNetInput(creature) {
+    let view_zone = this.viewZoneGetter(creature.coordinates);
+    let creatures = this._generateCreaturesInput(view_zone);
+    return [
+      //food type diff
+      Math.abs(creature.eating_type - view_zone.right.food_type),
+      Math.abs(creature.eating_type - view_zone.bottom.food_type),
+      Math.abs(creature.eating_type - view_zone.left.food_type),
+      Math.abs(creature.eating_type - view_zone.top.food_type),
+      Math.abs(creature.eating_type - view_zone.right2.food_type),
+      Math.abs(creature.eating_type - view_zone.bottom2.food_type),
+      Math.abs(creature.eating_type - view_zone.left2.food_type),
+      Math.abs(creature.eating_type - view_zone.top2.food_type),
+      Math.abs(creature.eating_type - view_zone.center.food_type),
+
+      //food amount
+      view_zone.right.food_amount,
+      view_zone.bottom.food_amount,
+      view_zone.left.food_amount,
+      view_zone.top.food_amount,
+      view_zone.right2.food_amount,
+      view_zone.bottom2.food_amount,
+      view_zone.left2.food_amount,
+      view_zone.top2.food_amount,
+      view_zone.center.food_amount,
+
+      //is sea
+      view_zone.right.is_sea ? 1 : 0,
+      view_zone.bottom.is_sea ? 1 : 0,
+      view_zone.left.is_sea ? 1 : 0,
+      view_zone.top.is_sea ? 1 : 0,
+      view_zone.right2.is_sea ? 1 : 0,
+      view_zone.bottom2.is_sea ? 1 : 0,
+      view_zone.left2.is_sea ? 1 : 0,
+      view_zone.top2.is_sea ? 1 : 0,
+      view_zone.center.is_sea ? 1 : 0,
+
+      //satiety
+      creature.satiety,
+
+      //creatures eating_type
+      creatures.eating_type.top,
+      creatures.eating_type.right,
+      creatures.eating_type.bottom,
+      creatures.eating_type.left,
+
+      //creatures satieties
+      creatures.satieties.top,
+      creatures.satieties.right,
+      creatures.satieties.bottom,
+      creatures.satieties.left,
+    ];
+  }
+
+  _generateCreaturesInput(view_zone) {
+    let c = {
+      top: findMainCreature(Object.values(view_zone.top.walking_creatures)),
+      right: findMainCreature(Object.values(view_zone.top.walking_creatures)),
+      bottom: findMainCreature(Object.values(view_zone.top.walking_creatures)),
+      left: findMainCreature(Object.values(view_zone.top.walking_creatures)),
+    };
+
+    let eating_type = {
+      top: c.top === null ? -1 : c.top.eating_type,
+      right: c.right === null ? -1 : c.right.eating_type,
+      bottom: c.bottom === null ? -1 : c.bottom.eating_type,
+      left: c.left === null ? -1 : c.left.eating_type,
+    };
+
+    let satieties = {
+      top: c.top === null ? -1 : c.top.satiety,
+      right: c.right === null ? -1 : c.right.satiety,
+      bottom: c.bottom === null ? -1 : c.bottom.satiety,
+      left: c.left === null ? -1 : c.left.satiety,
+    };
+
+    return {
+      eating_type: eating_type,
+      satieties: satieties
+    }
+
+
+    function findMainCreature(creatures) {
+      if (creatures.length == 0)
+        return null;
+
+      let main_creature = creatures[0];
+      for (let i = 1; i < creatures.length; i++) {
+        let creature = creatures[i];
+        if (creature.satiety > main_creature.satiety)
+          main_creature = creature;
+      }
+      return main_creature;
+    }
   }
 }

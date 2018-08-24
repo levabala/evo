@@ -24,7 +24,7 @@ class SimMaster {
     //constants
     this.MAX_TICK_SIM_TIME = 3000;
     this.MAP_UPDATE_FREQ = 2; //1 update per 10 ticks
-    this.TICKS_BUFFER = 1;
+    this.TICKS_BUFFER = 3;
 
     //events
     this.registerEvent("tick_start");
@@ -34,7 +34,6 @@ class SimMaster {
 
   set sim_speed(value) {
     let last = this.sim_speed;
-    debugger
     this._sim_speed = value;
     this.targered_sim_speed = value;
     this.dispatchEvent("sim_speed_changed", {
@@ -131,14 +130,6 @@ class SimMaster {
       this.map_controller.last_update_timecode = nowTime;
     }
 
-    if (this.last_tick_duration > 300) {
-      this.silentSimSpeed(this._sim_speed / (this.last_tick_duration / 300));
-    } else
-    if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
-      let a = this.last_ticks_duration_average > 0 ? (1 + 1 / this.last_ticks_duration_average / 70 * 100) : 1;
-      this.silentSimSpeed(Math.min(this._sim_speed * a, this.targered_sim_speed));
-    }
-
     this.dispatchEvent("tick_end");
     this.ticks_counter++;
 
@@ -151,10 +142,20 @@ class SimMaster {
     this.lastTimecode = nowTime;
     this.last_tick_duration = Date.now() - nowTime;
 
-    this.last_ticks_duration.push(this.last_tick_duration);
-    if (this.last_tick_duration.length > this.TICKS_BUFFER)
-      this.last_tick_duration.shift();
+    if (this.last_ticks_duration_average > 150) {
+      this.silentSimSpeed(this._sim_speed / (this.last_ticks_duration_average / 150));
+    } else
+    if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
+      let a = this.last_ticks_duration_average > 0 ? (1 / this.last_ticks_duration_average / 70 * 100) : 0;
+      this.silentSimSpeed(Math.min(this._sim_speed + Math.pow(a, 1.2) * 40, this.targered_sim_speed));
+    }
 
+    this.last_ticks_duration.push(this.last_tick_duration);
+    if (this.last_ticks_duration.length > this.TICKS_BUFFER) {
+      this.last_ticks_duration.shift();
+    }
+
+    this.last_ticks_duration_average = 0
     for (let duration of this.last_ticks_duration)
       this.last_ticks_duration_average += duration;
     this.last_ticks_duration_average /= this.last_ticks_duration.length;

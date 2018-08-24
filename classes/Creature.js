@@ -1,7 +1,7 @@
 class Creature {
   constructor(
     id, coordinates, satiety, toxicity_resistance,
-    eating_type, request_view_zone,
+    eating_type, request_net_input,
     control_net, food_variety = -0.483, max_age = 50 * 1000) {
 
     Reactor.apply(this, []);
@@ -12,7 +12,7 @@ class Creature {
     this.toxicity_resistance = toxicity_resistance;
     this.eating_type = eating_type;
     this.coordinates = coordinates;
-    this.request_view_zone = request_view_zone;
+    this.request_net_input = request_net_input;
     this.age = 0;
     this.fatigue = 1;
     this.timecode = Date.now();
@@ -54,7 +54,7 @@ class Creature {
   clone() {
     return new Creature(
       this.id, this.coordinates.clone(), this.satiety,
-      this.toxicity_resistance, this.eating_type, this.request_view_zone,
+      this.toxicity_resistance, this.eating_type, this.request_net_input,
       this.control_net.clone(), this.eating_type, this.max_age
     );
   }
@@ -106,7 +106,7 @@ class Creature {
 
   _makeAction() {
     let actions_weight = this.control_net.calc(
-      this._generateNetInput()
+      this.request_net_input(this)
     );
 
     //execute the most weightful action
@@ -123,44 +123,6 @@ class Creature {
   split() {
     this.dispatchEvent("wanna_split");
     this.split_cooldown = this.SPLIT_MIN_INTERVAL;
-  }
-
-  _generateNetInput() {
-    let view_zone = this.request_view_zone(this.coordinates);
-    return [
-      //food type diff
-      Math.abs(this.eating_type - view_zone.right.food_type),
-      Math.abs(this.eating_type - view_zone.bottom.food_type),
-      Math.abs(this.eating_type - view_zone.left.food_type),
-      Math.abs(this.eating_type - view_zone.top.food_type),
-      Math.abs(this.eating_type - view_zone.right2.food_type),
-      Math.abs(this.eating_type - view_zone.bottom2.food_type),
-      Math.abs(this.eating_type - view_zone.left2.food_type),
-      Math.abs(this.eating_type - view_zone.top2.food_type),
-
-      //food amount
-      view_zone.right.food_amount,
-      view_zone.bottom.food_amount,
-      view_zone.left.food_amount,
-      view_zone.top.food_amount,
-      view_zone.right2.food_amount,
-      view_zone.bottom2.food_amount,
-      view_zone.left2.food_amount,
-      view_zone.top2.food_amount,
-
-      //is sea
-      view_zone.right.is_sea ? 1 : 0,
-      view_zone.bottom.is_sea ? 1 : 0,
-      view_zone.left.is_sea ? 1 : 0,
-      view_zone.top.is_sea ? 1 : 0,
-      view_zone.right2.is_sea ? 1 : 0,
-      view_zone.bottom2.is_sea ? 1 : 0,
-      view_zone.left2.is_sea ? 1 : 0,
-      view_zone.top2.is_sea ? 1 : 0,
-      Math.abs(this.eating_type - view_zone.center.food_type),
-      view_zone.center.food_amount,
-      this.satiety
-    ];
   }
 
   eat(cell) {
