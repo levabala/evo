@@ -3,7 +3,7 @@ var div_graph_population = document.getElementById("div_graph2");
 var div_graph_generation = document.getElementById("div_graph1");
 var div_info = document.getElementById("div_info");
 var range_sim_speed = document.getElementById("range_sim_speed");
-var size = 300;
+var size = 500;
 var coeff_x = 16 / 25;
 var coeff_y = 9 / 25;
 var plot_population = new SimplePlot(div_graph_population, 100, "darkgreen");
@@ -23,6 +23,7 @@ var evo_stimulator = new EvoStimulator(master);
 var info_box = new InfoBox(div_info);
 
 let power = 2;
+range_sim_speed.revert_set = true;
 range_sim_speed.value = Math.pow(master.sim_speed, 1 / power);
 range_sim_speed.oninput = function () {
   if (!range_sim_speed.revert_set) {
@@ -54,4 +55,4 @@ setTimeout(function () {
     .connectInfoBox(info_box);
 }.bind(this), 500);
 
-master.startSimulation();
+window.onload = () => master.startSimulation();
