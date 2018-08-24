@@ -228,7 +228,7 @@ class CreaturesController {
     this.addCreature((this._generateCreature(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE)));
   }
 
-  _generateCreature(x_range, y_range, parent_action_net = null, parent_move_net = null) {
+  _generateCreature(x_range, y_range, parent_control_net = null) {
     this.creatures_counter++;
     var creature = new Creature(
       this.creatures_counter,
@@ -237,8 +237,7 @@ class CreaturesController {
       this.TOXICIETY_RESISTANCE,
       Math.random(),
       this.viewZoneGetter.bind(this),
-      parent_action_net ? parent_action_net : this._generateActionNet(),
-      parent_move_net ? parent_move_net : this._generateMoveNet(),
+      parent_control_net ? parent_control_net : this._generateControlNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
       this.NEW_CREATURE_MAX_AGE
     );
@@ -246,7 +245,7 @@ class CreaturesController {
     return creature;
   }
 
-  _generateCreatureAtPosition(pos, parent_action_net = null, parent_move_net = null) {
+  _generateCreatureAtPosition(pos, parent_control_net = null) {
     this.creatures_counter++;
     var creature = new Creature(
       this.creatures_counter,
@@ -255,8 +254,7 @@ class CreaturesController {
       this.TOXICIETY_RESISTANCE,
       Math.random(),
       this.viewZoneGetter.bind(this),
-      parent_action_net ? parent_action_net : this._generateActionNet(),
-      parent_move_net ? parent_move_net : this._generateMoveNet(),
+      parent_control_net ? parent_control_net : this._generateControlNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
       this.NEW_CREATURE_MAX_AGE
     );
@@ -328,91 +326,49 @@ class CreaturesController {
     return creatures;
   }
 
-  _generateActionNet() {
+  _generateControlNet() {
     //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
-    //output: move/eat
+    //output: move_up/move_right/move_down/move_left/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v]
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v],
+        [v, v, v, v, v, v, v, v]
       ], //input
       [
-        [v, v],
-        [v, v],
-        [v, v]
-      ], //output
-      new OneLayer(
-        PROCESS_FUNCTIONS.Lineral_OneLimited
-      ),
-      PROCESS_FUNCTIONS.Lineral,
-      PROCESS_FUNCTIONS.Lineral_OneLimited
-    ).mutate(this.START_MUTATE_RANGE);
-  }
-
-  _generateMoveNet() {
-    //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
-    //output: right/bottom/left/up
-    let v = this.BASE_NET_VALUE;
-    return new NeuralNetwork(
-      [
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v],
-        [v, v, v]
-      ], //input
-      [
-        [v, v, v, v],
-        [v, v, v, v],
-        [v, v, v, v]
+        [v, v, v, v, v],
+        [v, v, v, v, v],
+        [v, v, v, v, v],
+        [v, v, v, v, v],
+        [v, v, v, v, v],
+        [v, v, v, v, v],
+        [v, v, v, v, v],
+        [v, v, v, v, v],
       ], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited

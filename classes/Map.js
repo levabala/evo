@@ -21,7 +21,7 @@ class SimMap {
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
     this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
     this.SEA_RATE_CHANGE_RATE = 0.003;
-    this.SEA_GLOBAL_LEVEL = 0.55;
+    this.SEA_GLOBAL_LEVEL = 0.5;
     this.SEA_CHANGE_INTERVAL_SECS = 10;
 
     //events
@@ -52,7 +52,7 @@ class SimMap {
   _generateMapPerlin() {
     map = [];
 
-    const changing_sea_rate = 128;
+    const changing_sea_rate = 256;
     let sea_rate_seed = Math.random();
     let sea_rate_height = 0;
     let sea_rate_map = this._createPerlinMap(changing_sea_rate, sea_rate_seed, sea_rate_height);
@@ -70,7 +70,7 @@ class SimMap {
     for (var x = 0; x < this.width; x++) {
       map.push([]);
       for (var y = 0; y < this.height; y++) {
-        let is_sea = sea_map[x][y] > (1 - sea_rate_map[x][y] * this.SEA_GLOBAL_LEVEL); //sea_rate_map);                             
+        let is_sea = this._isSea(sea_map[x][y], sea_rate_map[x][y]);
         if (is_sea)
           this.sea_cells_count++;
         map[x][y] = new Cell(
@@ -94,8 +94,12 @@ class SimMap {
     return map;
   }
 
+  _isSea(level, rate) {
+    return level > (1 - rate * this.SEA_GLOBAL_LEVEL);
+  }
+
   _changeSeaRate(rate_diff) {
-    const changing_sea_rate = 192;
+    const changing_sea_rate = 256;
     let sea_rate_height = this.last_sea_rate_height + Math.random() * rate_diff;
     let sea_rate_map = this._createPerlinMap(changing_sea_rate, this.last_sea_rate_seed, sea_rate_height);
 
@@ -103,7 +107,7 @@ class SimMap {
     for (var x = 0; x < this.width; x++)
       for (var y = 0; y < this.height; y++) {
         let cell = this.cells[x][y];
-        let is_sea = cell.sea_level > (1 - sea_rate_map[x][y] * this.SEA_GLOBAL_LEVEL); //sea_rate_map);                     
+        let is_sea = this._isSea(cell.sea_level, sea_rate_map[x][y]);
         if (is_sea)
           this.sea_cells_count++;
         cell.is_sea = is_sea;

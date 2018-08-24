@@ -7,11 +7,13 @@ class SimMaster {
     this.creatures_controller = creatures_controller;
     this.map_controller = map_controller;
     this._tick_interval = tick_interval;
-    this._sim_speed = sim_speed;
+    this._sim_speed = 0.1;
+    this.targered_sim_speed = sim_speed;
     this.last_tick_duration = 0;
+    this.last_ticks_duration_average = 0;
+    this.last_ticks_duration = [];
     this.ticks_counter = 0;
     this.launch_time = Date.now();
-    this.targered_sim_speed = sim_speed;
     this.sim_time = 0;
     this.debug = false;
     this.paused = false;
@@ -22,6 +24,7 @@ class SimMaster {
     //constants
     this.MAX_TICK_SIM_TIME = 3000;
     this.MAP_UPDATE_FREQ = 2; //1 update per 10 ticks
+    this.TICKS_BUFFER = 1;
 
     //events
     this.registerEvent("tick_start");
@@ -31,6 +34,7 @@ class SimMaster {
 
   set sim_speed(value) {
     let last = this.sim_speed;
+    debugger
     this._sim_speed = value;
     this.targered_sim_speed = value;
     this.dispatchEvent("sim_speed_changed", {
@@ -68,7 +72,7 @@ class SimMaster {
 
   startSimulation() {
     this.lastTimecode = Date.now(); // - 30000 / this._sim_speed;
-    this.creatures_controller.last_tick_timecode = this.lastTimecode;
+    this.creatures_controller.last_tick_timecode = this.creatures_controller.last_update_timecode = this.lastTimecode;
     this.simulationTick();
     this.launch_time = Date.now();
   }
@@ -80,6 +84,8 @@ class SimMaster {
     for (let x = 0; x < this.map_controller.map.width; x++)
       for (let y = 0; y < this.map_controller.map.height; y++)
         this.map_controller.map.cells[x][y].last_update_timecode = this.lastTimecode - this.map_controller.map.cells[x][y].buffer;
+
+    this.map_controller.last_update_timecode = this.lastTimecode;
 
     this.simulationTick();
   }
@@ -126,11 +132,11 @@ class SimMaster {
     }
 
     if (this.last_tick_duration > 300) {
-      this.silentSimSpeed(this.sim_speed / (this.last_tick_duration / 300));
+      this.silentSimSpeed(this._sim_speed / (this.last_tick_duration / 300));
     } else
-    if (this.last_tick_duration < 70 && this.sim_speed < this.targered_sim_speed) {
-      let a = (1 + 1 / this.last_tick_duration / 70 * 100);
-      this.silentSimSpeed(Math.min(this.sim_speed * a, this.targered_sim_speed));
+    if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
+      let a = this.last_ticks_duration_average > 0 ? (1 + 1 / this.last_ticks_duration_average / 70 * 100) : 1;
+      this.silentSimSpeed(Math.min(this._sim_speed * a, this.targered_sim_speed));
     }
 
     this.dispatchEvent("tick_end");
@@ -144,5 +150,13 @@ class SimMaster {
 
     this.lastTimecode = nowTime;
     this.last_tick_duration = Date.now() - nowTime;
+
+    this.last_ticks_duration.push(this.last_tick_duration);
+    if (this.last_tick_duration.length > this.TICKS_BUFFER)
+      this.last_tick_duration.shift();
+
+    for (let duration of this.last_ticks_duration)
+      this.last_ticks_duration_average += duration;
+    this.last_ticks_duration_average /= this.last_ticks_duration.length;
   }
 }
