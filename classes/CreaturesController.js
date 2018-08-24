@@ -113,7 +113,7 @@ class CreaturesController {
     //all creatures tick
     let creatures = Object.values(this.creatures);
     for (let creature of creatures) {
-      creature.tick(time);
+      creature.tick(creature, time);
       creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature);
@@ -207,7 +207,7 @@ class CreaturesController {
 
   _creaturesDensity() {
     let creatures_count = Object.keys(this.creatures).length;
-    let density = creatures_count == 0 ? 0 : creatures_count / this.map.width / this.map.height;
+    let density = creatures_count == 0 ? 0 : creatures_count / (this.map.width * this.map.height - this.map.sea_cells_count);
     this.creatures_density = density;
     return density;
   }
@@ -298,16 +298,21 @@ class CreaturesController {
     else if (new_position.y < this.map.VERTICAL_AXIS_RANGE.from)
       new_position.y = this.map.VERTICAL_AXIS_RANGE.to;
 
-    //remove from last cell
-    let previous_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
-    delete previous_cell.walking_creatures[creature.id];
+    let now_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+    let new_cell = this.map.cells[new_position.x][new_position.y];
+
+    //check cell for sea
+    if (new_cell.is_sea)
+      return false;
+
+    //remove from last cell    
+    delete now_cell.walking_creatures[creature.id];
 
     //update coordinates
     creature.coordinates = new_position;
 
-    //add to new one
-    let cell = this.map.cells[new_position.x][new_position.y];
-    cell.walking_creatures[creature.id] = creature;
+    //add to new one    
+    new_cell.walking_creatures[creature.id] = creature;
 
     //downgrade satiety
     creature.satiety -= this.MOVE_COST;
@@ -324,11 +329,20 @@ class CreaturesController {
   }
 
   _generateActionNet() {
-    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
     //output: move/eat
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],
@@ -362,11 +376,20 @@ class CreaturesController {
   }
 
   _generateMoveNet() {
-    //input: viewzone(9 cells -> x2(food_type + food_amount)) + satiety
+    //input: viewzone(9 cells -> x3(food_type + food_amount + is_sea)) + satiety
     //output: right/bottom/left/up
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
+        [v, v, v],
         [v, v, v],
         [v, v, v],
         [v, v, v],

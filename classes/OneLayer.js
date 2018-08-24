@@ -6,7 +6,7 @@ class OneLayer {
   calc(input) {
     //normalize output    
     let output = input.slice();
-    for (var o in output)
+    for (let o in output)
       output[o] = this.output_fun(output[o]);
     return output;
   }

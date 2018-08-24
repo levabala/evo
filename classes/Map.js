@@ -7,11 +7,36 @@ class SimMap {
     this.height = height;
     this.fertility_base = fertility_base;
     this.fertility_range = fertility_range;
-    this.cells = this._generateMapPerlin();
+    this.cells = [];
+    this.last_sea_rate_seed = 0;
+    this.last_sea_level_seed = 0;
+    this.last_food_type_seed = 0;
+    this.last_sea_rate_height = 0;
+    this.last_sea_level_height = 0;
+    this.last_food_type_height = 0;
+    this.change_sea_timeout = 0;
+    this.sea_cells_count = 0;
 
     //constants
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
     this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
+    this.SEA_RATE_CHANGE_RATE = 0.003;
+    this.SEA_GLOBAL_LEVEL = 0.55;
+    this.SEA_CHANGE_INTERVAL_SECS = 10;
+
+    //events
+    this.registerEvent("sea_changed");
+
+    //generate map
+    this.cells = this._generateMapPerlin();
+  }
+
+  checkForChange(time) {
+    this.change_sea_timeout -= time;
+    while (this.change_sea_timeout <= 0) {
+      this._changeSeaRate(this.SEA_RATE_CHANGE_RATE);
+      this.change_sea_timeout += this.SEA_CHANGE_INTERVAL_SECS * 1000;
+    }
   }
 
   _generateMapRandom() {
@@ -25,27 +50,94 @@ class SimMap {
   }
 
   _generateMapPerlin() {
-    const changing = 64;
-    var map = [];
-    noise.seed(Math.random());
-    var max_food_type = 0;
+    map = [];
+
+    const changing_sea_rate = 128;
+    let sea_rate_seed = Math.random();
+    let sea_rate_height = 0;
+    let sea_rate_map = this._createPerlinMap(changing_sea_rate, sea_rate_seed, sea_rate_height);
+
+    const changing_sea = 32;
+    let sea_level_seed = Math.random();
+    let sea_level_height = 0;
+    let sea_map = this._createPerlinMap(changing_sea, sea_level_seed, sea_level_height);
+
+    const changing_food = 64;
+    let food_type_seed = Math.random();
+    let food_type_height = 0;
+    let food_map = this._createPerlinMap(changing_food, food_type_seed, food_type_height);
+    this.sea_cells_count = 0;
     for (var x = 0; x < this.width; x++) {
       map.push([]);
       for (var y = 0; y < this.height; y++) {
-        let val = noise.perlin2(x / changing, y / changing);
-        let food_type = (val + 0.5) / 2;
-        max_food_type = Math.max(food_type, max_food_type);
+        let is_sea = sea_map[x][y] > (1 - sea_rate_map[x][y] * this.SEA_GLOBAL_LEVEL); //sea_rate_map);                             
+        if (is_sea)
+          this.sea_cells_count++;
         map[x][y] = new Cell(
           new P(x, y),
           this.fertility_base + (Math.random() - 1) * 2 * this.fertility_range,
-          food_type
+          food_map[x][y],
+          is_sea,
+          sea_map[x][y],
+          sea_rate_map[x][y]
         );
       }
     }
-    var coeff = 1 / max_food_type;
+
+    this.last_sea_rate_seed = sea_rate_seed;
+    this.last_sea_level_seed = sea_level_seed;
+    this.last_food_type_seed = food_type_seed;
+    this.last_sea_rate_height = sea_rate_height;
+    this.last_sea_level_height = sea_level_height;
+    this.last_food_type_height = food_type_height;
+
+    return map;
+  }
+
+  _changeSeaRate(rate_diff) {
+    const changing_sea_rate = 192;
+    let sea_rate_height = this.last_sea_rate_height + Math.random() * rate_diff;
+    let sea_rate_map = this._createPerlinMap(changing_sea_rate, this.last_sea_rate_seed, sea_rate_height);
+
+    this.sea_cells_count = 0;
     for (var x = 0; x < this.width; x++)
       for (var y = 0; y < this.height; y++) {
-        map[x][y].food_type *= coeff;
+        let cell = this.cells[x][y];
+        let is_sea = cell.sea_level > (1 - sea_rate_map[x][y] * this.SEA_GLOBAL_LEVEL); //sea_rate_map);                     
+        if (is_sea)
+          this.sea_cells_count++;
+        cell.is_sea = is_sea;
+        cell.sea_rate = sea_rate_map[x][y];
+        //cell.fertility = !is_sea ? this.fertility_base + (Math.random() - 1) * 2 * this.fertility_range : 0;        
+      }
+
+    this.last_sea_rate_height = sea_rate_height;
+
+    this.dispatchEvent("sea_changed");
+  }
+
+  _createPerlinMap(changing, seed, height) {
+    let map = [];
+    noise.seed(seed);
+    var max = Number.MIN_SAFE_INTEGER;
+    var min = Number.MAX_SAFE_INTEGER;
+    for (var x = 0; x < this.width; x++) {
+      map.push([]);
+      for (var y = 0; y < this.height; y++) {
+        let val = noise.perlin3(x / changing, y / changing, height);
+        let food_type = (val + 0.5) / 2;
+        max = Math.max(food_type, max);
+        min = Math.min(food_type, min);
+        map[x][y] = food_type;
+      }
+    }
+
+    max -= min;
+    var coeff = 1 / max;
+    for (var x = 0; x < this.width; x++)
+      for (var y = 0; y < this.height; y++) {
+        map[x][y] -= min
+        map[x][y] *= coeff;
       }
 
     return map;

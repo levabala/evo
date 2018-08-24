@@ -116,12 +116,14 @@ class SimMaster {
     }
 
     let anything_done = this.creatures_controller.tick(timeDelta, nowTime, this._tick_interval * this._sim_speed, this._sim_speed);
-    if (anything_done && this.ticks_counter % this.MAP_UPDATE_FREQ == 0)
+    if (anything_done && this.ticks_counter % this.MAP_UPDATE_FREQ == 0) {
       this.map_controller.tick(
-        this.creatures_controller - this.lastTimecode,
+        (nowTime - this.map_controller.last_update_timecode) * this.sim_speed,
         this.creatures_controller.last_tick_timecode,
         this._sim_speed
       );
+      this.map_controller.last_update_timecode = nowTime;
+    }
 
     if (this.last_tick_duration > 300) {
       this.silentSimSpeed(this.sim_speed / (this.last_tick_duration / 300));
@@ -129,7 +131,6 @@ class SimMaster {
     if (this.last_tick_duration < 70 && this.sim_speed < this.targered_sim_speed) {
       let a = (1 + 1 / this.last_tick_duration / 70 * 100);
       this.silentSimSpeed(Math.min(this.sim_speed * a, this.targered_sim_speed));
-      debugger
     }
 
     this.dispatchEvent("tick_end");

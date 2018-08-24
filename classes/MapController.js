@@ -1,9 +1,11 @@
 class MapController {
   constructor(map) {
     this.map = map;
+    this.last_update_timecode = Date.now();
   }
 
   tick(time, timecode, sim_speed) {
+    this.map.checkForChange(time);
     for (var x = 0; x < this.map.width; x++)
       for (var y = 0; y < this.map.height; y++) {
         let cell = this.map.cells[x][y];
