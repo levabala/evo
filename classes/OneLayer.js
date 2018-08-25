@@ -3,6 +3,13 @@ class OneLayer {
     this.output_fun = output_fun;
   }
 
+  toJsonObject() {
+    return {
+      type: this.name,
+      output_fun_name: this.output_fun.name
+    }
+  }
+
   calc(input) {
     //normalize output    
     let output = input.slice();

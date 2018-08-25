@@ -10,6 +10,7 @@ class CreaturesController {
     this.maximal_generation = 0;
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
+    this.maximal_eated_creatures = 0;
     this.last_tick_timecode = Date.now();
     this.sim_speed = 1;
     this.creatures_density = 0;
@@ -109,20 +110,37 @@ class CreaturesController {
     this.maximal_generation = 0;
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
+    this.maximal_eated_creatures = 0;
 
     //all creatures tick    
     let change = this.CREATURE_SATIETY_DOWNGRADE * time;
     let count = 0;
     for (let id in this.creatures) {
       let creature = this.creatures[id];
+
+      //interact other one
+      let pos = creature.coordinates;
+      let near_creatures = this.map.cells[pos.x][pos.y].walking_creatures;
+      for (let id in near_creatures) {
+        if (id == creature.id || near_creatures[id].satiety >= creature.satiety)
+          continue;
+        if (!creature.interact(near_creatures[id]))
+          break;
+      }
+
+      //perform other actions
       creature.tick(time);
+
+      //downgrade
       creature.satiety -= change;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature);
 
+      //statistic
       this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
       this.maximal_age = Math.max(this.maximal_age, creature.age);
       this.maximal_effectivity = Math.max(this.maximal_effectivity, creature.effectivity);
+      this.maximal_eated_creatures = Math.max(this.maximal_eated_creatures, creature.eated_creatures);
 
       count++;
     }
@@ -232,7 +250,7 @@ class CreaturesController {
     this.addCreature((this._generateCreature(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE)));
   }
 
-  _generateCreature(x_range, y_range, parent_control_net = null) {
+  _generateCreature(x_range, y_range) {
     this.creatures_counter++;
     var creature = new Creature(
       this.creatures_counter,
@@ -241,7 +259,9 @@ class CreaturesController {
       this.TOXICIETY_RESISTANCE,
       Math.random(),
       this._generateNetInput.bind(this),
-      parent_control_net ? parent_control_net : this._generateControlNet(),
+      this._generateCreatureInteractInput.bind(this),
+      this._generateControlNet(),
+      this._generateCreatureInteractNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
       this.NEW_CREATURE_MAX_AGE
     );
@@ -249,7 +269,7 @@ class CreaturesController {
     return creature;
   }
 
-  _generateCreatureAtPosition(pos, parent_control_net = null) {
+  _generateCreatureAtPosition(pos) {
     this.creatures_counter++;
     var creature = new Creature(
       this.creatures_counter,
@@ -258,7 +278,9 @@ class CreaturesController {
       this.TOXICIETY_RESISTANCE,
       Math.random(),
       this.viewZoneGetter.bind(this),
-      parent_control_net ? parent_control_net : this._generateControlNet(),
+      this._generateCreatureInteractInput.bind(this),
+      this._generateControlNet(),
+      this._generateCreatureInteractNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
       this.NEW_CREATURE_MAX_AGE
     );
@@ -328,6 +350,33 @@ class CreaturesController {
     for (var i = 0; i < amount; i++)
       creatures.push(this.generateCreature(x_range, y_range));
     return creatures;
+  }
+
+  _generateCreatureInteractNet() {
+    //input:
+    //+ eating_type diff
+    //+ my satiety
+    //+ its satiety
+    //output: eat/none
+    let v = this.BASE_NET_VALUE;
+    return new NeuralNetwork(
+      [
+        //2 neurons in hidden layer
+        [v, v],
+        [v, v],
+        [v, v]
+      ], //input
+      [
+        //2 outputs & 2 hidden neurons
+        [v, v],
+        [v, v],
+      ], //output
+      new OneLayer(
+        PROCESS_FUNCTIONS.Lineral_OneLimited
+      ),
+      PROCESS_FUNCTIONS.Lineral,
+      PROCESS_FUNCTIONS.Lineral_OneLimited
+    ).mutate(this.START_MUTATE_RANGE);
   }
 
   _generateControlNet() {
@@ -402,6 +451,14 @@ class CreaturesController {
       PROCESS_FUNCTIONS.Lineral,
       PROCESS_FUNCTIONS.Lineral_OneLimited
     ).mutate(this.START_MUTATE_RANGE);
+  }
+
+  _generateCreatureInteractInput(who, whom) {
+    return [
+      Math.abs(who.eating_type - whom.eating_type),
+      who.satiety,
+      whom.satiety
+    ]
   }
 
   _generateNetInput(creature) {

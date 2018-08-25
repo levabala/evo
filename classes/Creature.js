@@ -1,18 +1,20 @@
 class Creature {
   constructor(
     id, coordinates, satiety, toxicity_resistance,
-    eating_type, request_net_input,
-    control_net, food_variety = -0.483, max_age = 50 * 1000) {
+    eating_type, request_control_net_input, request_interact_net_input,
+    control_net, interact_net, food_variety = -0.483, max_age = 50 * 1000) {
 
     Reactor.apply(this, []);
 
     this.id = id;
+    this.population_id = Math.floor((Math.random() + 0.5) * 1000 * 1000 * 1000);
     this.satiety = satiety;
     this.satiety_gained = 0;
     this.toxicity_resistance = toxicity_resistance;
     this.eating_type = eating_type;
     this.coordinates = coordinates;
-    this.request_net_input = request_net_input;
+    this.request_control_net_input = request_control_net_input;
+    this.request_interact_net_input = request_interact_net_input;
     this.age = 0;
     this.fatigue = 1;
     this.timecode = Date.now();
@@ -21,9 +23,11 @@ class Creature {
     this.max_age = max_age;
     this.effectivity = 0;
     this.split_cooldown = 0;
+    this.eated_creatures = 0;
 
     //neural networks
     this.control_net = control_net;
+    this.interact_net = interact_net;
 
     //constants    
     this.FOOD_PER_ACTION = 0.3;
@@ -32,8 +36,10 @@ class Creature {
     this.SPLIT_MIN_INTERVAL = 5000;
     this.FOOD_MULTIPLITER = 1;
     this.ACTION_COST = 1;
+    this.EAT_CREATURE_COST = 2;
 
     //events
+    this.registerEvent("wanna_eat_creature");
     this.registerEvent("wanna_eat");
     this.registerEvent("wanna_move");
     this.registerEvent("wanna_split");
@@ -43,20 +49,25 @@ class Creature {
   mutateProps(range) {
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
+    this.population_id += Math.floor(Math.random() * 10);
     return this;
   }
 
   mutateNets(range) {
     this.control_net.mutate(range);
+    this.interact_net.mutate(range);
     return this;
   }
 
   clone() {
-    return new Creature(
+    let creature = new Creature(
       this.id, this.coordinates.clone(), this.satiety,
-      this.toxicity_resistance, this.eating_type, this.request_net_input,
-      this.control_net.clone(), this.eating_type, this.max_age
+      this.toxicity_resistance, this.eating_type, this.request_control_net_input,
+      this.request_interact_net_input, this.control_net.clone(),
+      this.interact_net.clone(), this.eating_type, this.max_age
     );
+    creature.population_id = this.population_id;
+    return creature;
   }
 
   _register_update() {
@@ -105,7 +116,7 @@ class Creature {
 
   _makeAction() {
     let actions_weight = this.control_net.calc(
-      this.request_net_input(this)
+      this.request_control_net_input(this)
     );
 
     //execute the most weightful action
@@ -122,6 +133,39 @@ class Creature {
   split() {
     this.dispatchEvent("wanna_split");
     this.split_cooldown = this.SPLIT_MIN_INTERVAL;
+  }
+
+  interact(creature) {
+    if (this.fatigue <= 0)
+      return false;
+
+    let input = this.request_interact_net_input(this, creature);
+    let actions_weight = this.interact_net.calc(
+      input
+    );
+
+    //execute the most weightful action
+    let action = ACTIONS_INTERACT_MAP[
+      actions_weight.indexOf(
+        Math.max(...actions_weight)
+      )
+    ];
+
+    action(this, creature);
+
+    return true;
+  }
+
+  eatCreature(creature) {
+    let effect = creature.satiety;
+    this.satiety = Math.min(this.satiety + effect, 1);
+    this.fatigue += this.EAT_CREATURE_COST;
+    this.eated_creatures++;
+
+    creature.satiety = -1;
+    creature.fatigue = Number.MIN_SAFE_INTEGER;
+
+    this._register_update();
   }
 
   eat(cell) {
@@ -170,5 +214,17 @@ class Creature {
 
   say(string) {
     console.log("#" + this.id + ":", string);
+  }
+
+  generateJsonObjectConstructor() {
+    return {
+      type: this.constructor.name,
+      id: this.id,
+      population_id: this.population_id,
+      eating_type: this.eating_type,
+      generation: this.generation,
+      control_net: this.control_net.toJsonObject(),
+      interact_net: this.interact_net.toJsonObject()
+    }
   }
 }

@@ -19,7 +19,8 @@ class SimObserver {
       "creatures_density": new Info("Creatures density", 0),
       "max_generation": new Info("Max generation", 0),
       "max_age": new Info("Max age", 0, (value) => `${value / 1000}sec`),
-      "max_effectivity": new Info("Max effectivity", 0, (value) => `${value}f/sec`, 1),
+      "max_effectivity": new Info("Max effectivity", 0, (value) => `${value}f/sec`, 2),
+      "max_eated_creatures": new Info("Max eated creatures", 0, (value) => `${value}c`),
       "food_variety": new Info("Food variety", 0),
     };
 
@@ -51,6 +52,7 @@ class SimObserver {
     this.info.creatures_density.value = controller.creatures_density;
     this.info.max_generation.value = controller.maximal_generation;
     this.info.max_age.value = controller.maximal_age;
+    this.info.max_eated_creatures.value = controller.maximal_eated_creatures;
     this.info.food_variety.value = controller.NEW_CREATURE_FOOD_VARIETY;
     this.info.tick_duration.value = this.sim_master.last_ticks_duration_average;
     this.info.max_effectivity.value = controller.maximal_effectivity;

@@ -25,6 +25,17 @@ class NeuralNetwork {
     return `input_weights: ${this.input_weights}\noutput_weights: ${this.output_weights}\nhidden_layer: ${this.hidden_layer}\ninput_fun: ${this.input_fun}\noutput_fun: ${this.output_fun}`;
   }
 
+  toJsonObject() {
+    return {
+      type: this.name,
+      intput_weight: this.input_weights,
+      output_weights: this.output_weights,
+      hidden_layer: this.hidden_layer.toJsonObject,
+      input_fun_name: this.input_fun.name,
+      output_fun_name: this.output_fun.name
+    }
+  }
+
   clone() {
     let cloned_net = new NeuralNetwork(
       clone2dArr(this.input_weights), clone2dArr(this.output_weights),

@@ -40,10 +40,21 @@ var ACTION_SPLIT = function (creature) {
     creature.say("wanna split")
 }
 
+var ACTION_EAT_CREATURE = function (who, whom) {
+  if (_debug)
+    who.say("wanna split")
+  who.eatCreature(whom);
+}
+
 var ACTIONS_DECIDE_MAP = {
   0: ACTION_MOVE_RIGHT,
   1: ACTION_MOVE_DOWN,
   2: ACTION_MOVE_LEFT,
   3: ACTION_MOVE_UP,
   4: ACTION_EAT
+}
+
+var ACTIONS_INTERACT_MAP = {
+  0: ACTION_EAT_CREATURE,
+  1: ACTION_NONE,
 }
