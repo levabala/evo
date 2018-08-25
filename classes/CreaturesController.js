@@ -110,19 +110,23 @@ class CreaturesController {
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
 
-    //all creatures tick
-    let creatures = Object.values(this.creatures);
-    for (let creature of creatures) {
-      creature.tick(creature, time);
-      creature.satiety -= this.CREATURE_SATIETY_DOWNGRADE * time;
+    //all creatures tick    
+    let change = this.CREATURE_SATIETY_DOWNGRADE * time;
+    let count = 0;
+    for (let id in this.creatures) {
+      let creature = this.creatures[id];
+      creature.tick(time);
+      creature.satiety -= change;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature);
 
       this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
       this.maximal_age = Math.max(this.maximal_age, creature.age);
       this.maximal_effectivity = Math.max(this.maximal_effectivity, creature.effectivity);
+
+      count++;
     }
-    this.creatures_count = creatures.length;
+    this.creatures_count = count;
   }
 
   reset() {
@@ -456,10 +460,10 @@ class CreaturesController {
 
   _generateCreaturesInput(view_zone) {
     let c = {
-      top: findMainCreature(Object.values(view_zone.top.walking_creatures)),
-      right: findMainCreature(Object.values(view_zone.top.walking_creatures)),
-      bottom: findMainCreature(Object.values(view_zone.top.walking_creatures)),
-      left: findMainCreature(Object.values(view_zone.top.walking_creatures)),
+      top: findMainCreature(view_zone.top.walking_creatures),
+      right: findMainCreature(view_zone.right.walking_creatures),
+      bottom: findMainCreature(view_zone.bottom.walking_creatures),
+      left: findMainCreature(view_zone.left.walking_creatures),
     };
 
     let eating_type = {
@@ -486,10 +490,10 @@ class CreaturesController {
       if (creatures.length == 0)
         return null;
 
-      let main_creature = creatures[0];
-      for (let i = 1; i < creatures.length; i++) {
-        let creature = creatures[i];
-        if (creature.satiety > main_creature.satiety)
+      let main_creature = null;
+      for (let id in creatures) {
+        let creature = creatures[id];
+        if (main_creature === null || creature.satiety > main_creature.satiety)
           main_creature = creature;
       }
       return main_creature;

@@ -142,8 +142,8 @@ class SimMaster {
     this.lastTimecode = nowTime;
     this.last_tick_duration = Date.now() - nowTime;
 
-    if (this.last_ticks_duration_average > 150) {
-      this.silentSimSpeed(this._sim_speed / (this.last_ticks_duration_average / 150));
+    if (this.last_tick_duration > 150) {
+      this.silentSimSpeed(this._sim_speed / (this.last_tick_duration / 150));
     } else
     if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
       let a = this.last_ticks_duration_average > 0 ? (1 / this.last_ticks_duration_average / 70 * 100) : 0;

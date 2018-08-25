@@ -69,19 +69,18 @@ class Creature {
   }
 
   timePerAction() {
-    return this.ACTION_COST / this.FATIGUE_DONWGRADE;
+    const time = this.ACTION_COST / this.FATIGUE_DONWGRADE;
+    return time;
   }
 
-  tick(ctx, time) {
-    ctx.age += time;
-    ctx.split_cooldown -= time;
-    ctx.effectivity = ctx.satiety_gained / ctx.age * 1000;
-    if (isNaN(ctx.effectivity))
-      debugger;
-    ctx._downGradeFatigue(time);
-    if (ctx.fatigue <= 0) {
-      ctx._makeAction();
-      ctx._checkForSplit();
+  tick(time) {
+    this.age += time;
+    this.split_cooldown -= time;
+    this.effectivity = this.satiety_gained / this.age * 1000;
+    this._downGradeFatigue(time);
+    if (this.fatigue <= 0) {
+      this._makeAction();
+      this._checkForSplit();
     }
     /*this.age += time;
     this.split_cooldown -= time;
