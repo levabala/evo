@@ -46,10 +46,14 @@ class Creature {
     this.registerEvent("action_performed");
   }
 
+  _generationPopulationId() {
+    return Math.floor((Math.random() + 0.5) * 1000 * 1000 * 1000);
+  }
+
   mutateProps(range) {
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
-    this.population_id += Math.floor(Math.random() * 10);
+    if (this.generation % 50) this.population_id = this._generationPopulationId();
     return this;
   }
 
@@ -227,4 +231,13 @@ class Creature {
       interact_net: this.interact_net.toJsonObject()
     }
   }
+}
+
+Creature.prototype.fromJsonObject = function (id, coordinates, satiety, toxicity_resistance, obj) {
+  let creature = new Creature(
+    id, coordinates, satiety, toxicity_resistance, obj.eating_type,
+    request_control_net_input, request_interact_net_input, obj.control_net,
+    obj.interact_net, food_variety, max_age
+  );
+  return creature;
 }
