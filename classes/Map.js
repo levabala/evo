@@ -158,4 +158,16 @@ class SimMap {
       p.y = this.VERTICAL_AXIS_RANGE.to;
     return this.cells[p.x][p.y];
   }
+
+  cellAtCoordinates(x, y) {
+    if (x > this.HORIZONTAL_AXIS_RANGE.to)
+      x = this.HORIZONTAL_AXIS_RANGE.from;
+    else if (x < this.HORIZONTAL_AXIS_RANGE.from)
+      x = this.HORIZONTAL_AXIS_RANGE.to;
+    if (y > this.VERTICAL_AXIS_RANGE.to)
+      y = this.VERTICAL_AXIS_RANGE.from;
+    else if (y < this.VERTICAL_AXIS_RANGE.from)
+      y = this.VERTICAL_AXIS_RANGE.to;
+    return this.cells[x][y];
+  }
 }

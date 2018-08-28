@@ -3,7 +3,7 @@ var div_graph_population = document.getElementById("div_graph2");
 var div_graph_generation = document.getElementById("div_graph1");
 var div_info = document.getElementById("div_info");
 var range_sim_speed = document.getElementById("range_sim_speed");
-var size = 200;
+var size = 400;
 var coeff_x = 16 / 25;
 var coeff_y = 9 / 25;
 var plot_population = new SimplePlot(div_graph_population, 100, "darkgreen");
@@ -12,7 +12,7 @@ var map = new SimMap(Math.floor(size * coeff_x), Math.floor(size * coeff_y));
 var map_controller = new MapController(map);
 var creatures_controller = new CreaturesController(map);
 var master = new SimMaster(
-  creatures_controller, map_controller, 100, 140
+  creatures_controller, map_controller, 100, 400
 );
 var sim_visualizer =
   new VisualizerCanvas(div_map, map_controller, creatures_controller)
@@ -45,11 +45,11 @@ setTimeout(function () {
   var sim_observer =
     new SimObserver(master)
     .addEventListener("updates", function () {
-      /*
+
       plot_population.applyDataSimple(
         _.takeRight(sim_observer.logs.creatures_count, 300)
       );
-      plot_generation.applyDataSimple(
+      /*plot_generation.applyDataSimple(
         _.takeRight(sim_observer.logs.max_generation, 300)
       );*/
     })

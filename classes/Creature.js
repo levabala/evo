@@ -36,10 +36,12 @@ class Creature {
     this.SPLIT_MIN_INTERVAL = 5000;
     this.FOOD_MULTIPLITER = 1;
     this.ACTION_COST = 1;
-    this.EAT_CREATURE_COST = 2;
+    this.EAT_CREATURE_COST = 10;
+    this.EAT_CREATURE_EFFECTIVITY = 0.2;
 
     //events
-    this.registerEvent("wanna_eat_creature");
+    this.registerEvent("eaten");
+    this.registerEvent("interaction");
     this.registerEvent("wanna_eat");
     this.registerEvent("wanna_move");
     this.registerEvent("wanna_split");
@@ -119,9 +121,8 @@ class Creature {
   }
 
   _makeAction() {
-    let actions_weight = this.control_net.calc(
-      this.request_control_net_input(this)
-    );
+    let input = this.request_control_net_input(this);
+    let actions_weight = this.control_net.calc(input);
 
     //execute the most weightful action
     let action = ACTIONS_DECIDE_MAP[
@@ -143,10 +144,17 @@ class Creature {
     if (this.fatigue <= 0)
       return false;
 
+    this.dispatchEvent("interaction");
+
     let input = this.request_interact_net_input(this, creature);
     let actions_weight = this.interact_net.calc(
       input
     );
+
+    if (this.EAT_EVERYBODY) {
+      ACTION_EAT_CREATURE(this, creature);
+      return true;
+    }
 
     //execute the most weightful action
     let action = ACTIONS_INTERACT_MAP[
@@ -161,13 +169,14 @@ class Creature {
   }
 
   eatCreature(creature) {
-    let effect = creature.satiety;
+    let effect = creature.satiety * this.EAT_CREATURE_EFFECTIVITY;
     this.satiety = Math.min(this.satiety + effect, 1);
     this.fatigue += this.EAT_CREATURE_COST;
     this.eated_creatures++;
 
     creature.satiety = -1;
     creature.fatigue = Number.MIN_SAFE_INTEGER;
+    creature.dispatchEvent("eaten");
 
     this._register_update();
   }
@@ -240,4 +249,6 @@ Creature.prototype.fromJsonObject = function (id, coordinates, satiety, toxicity
     obj.interact_net, food_variety, max_age
   );
   return creature;
-}
+};
+
+Creature.prototype.EAT_EVERYBODY = false;

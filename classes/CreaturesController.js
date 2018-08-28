@@ -10,13 +10,21 @@ class CreaturesController {
     this.maximal_generation = 0;
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
-    this.maximal_eated_creatures = 0;
+    this.maximal_eaten_creatures = 0;
     this.last_tick_timecode = Date.now();
     this.sim_speed = 1;
     this.creatures_density = 0;
+    this.eaten_per_tick = 0;
+    this.interactions_per_tick = 0;
+    this.eaten_creatures_per_sec = 0;
+    this.eaten_creatures_per_sec_buffer = [];
+    this.eaten_creatures_per_sec_average = 0;
+    this.interaction_per_sec = 0;
+    this.interaction_per_sec_buffer = [];
+    this.interaction_per_sec_average = 0;
 
     //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.005; //0.005; //creatures per cell
+    this.MINIMAL_CREATURES_DENSITY = 0.005; //creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
     this.SPLIT_COST = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
@@ -38,10 +46,9 @@ class CreaturesController {
     this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL = 0.0003;
     this.MAX_NEW_CREATURES_AT_ONCE = 1000000;
 
-    //other
-    this.debug = false;
+    //other    
     this.new_creature_buffer = 0;
-    this.new_random_creautures_created = 0;
+    this.new_random_creautures_createn = 0;
     this._time_buffer_1 = 0;
     this._time_buffer_2 = 0;
 
@@ -71,27 +78,42 @@ class CreaturesController {
         return Math.min(time_per_action, creature.timePerAction());
       }, Number.MAX_SAFE_INTEGER
     );
-    if (this.debug) {
-      console.log("max actions count:", max_actions_count);
-      console.log("min action time:", min_time_per_action);
-      console.log("sim speed:", this.sim_speed);
-      console.log("sim delta:", sim_delta);
-      console.log("creatures density:", Math.round(this.creatures_density * 100000) / 100000);
-      console.log("food variety:", this.NEW_CREATURE_FOOD_VARIETY);
-    }
     if (max_actions_count == 0)
       return false;
 
-    let real_time_per_tick = min_time_per_action / sim_speed; //sim_delta / sim_speed / max_actions_count;
-    let sim_time_per_tick = min_time_per_action; //sim_delta / max_actions_count;
-    //console.log("real time per tick:", real_time_per_tick);
-    //console.log("sim time per tick:", sim_time_per_tick);
+    this.eaten_creatures = this.interactions_per_tick = 0;
+
+    let real_time_per_tick = min_time_per_action / sim_speed;
+    let sim_time_per_tick = min_time_per_action;
     for (let i = 0; i < max_actions_count; i++) {
       this._auto_add_creatures(sim_time_per_tick);
       this._internal_tick(sim_time_per_tick);
       this.last_tick_timecode += real_time_per_tick;
     }
-    //this.last_tick_timecode = timecode;
+
+    this.interaction_per_sec = this.interactions_per_tick / sim_time_per_tick / max_actions_count * 1000;
+    this.interaction_per_sec_buffer.push(this.interaction_per_sec);
+    if (this.interaction_per_sec_buffer.length > 5)
+      this.interaction_per_sec_buffer.shift();
+
+    this.interaction_per_sec_average = 0;
+    for (let rate of this.interaction_per_sec_buffer)
+      this.interaction_per_sec_average += rate;
+    this.interaction_per_sec_average /= this.interaction_per_sec_buffer.length;
+
+    this.eaten_creatures_rate =
+      this.interactions_per_tick > 0 ?
+      this.eaten_creatures / this.interactions_per_tick :
+      0;
+
+    this.eaten_creatures_per_sec_buffer.push(this.eaten_creatures_rate);
+    if (this.eaten_creatures_per_sec_buffer.length > 5)
+      this.eaten_creatures_per_sec_buffer.shift();
+
+    this.eaten_creatures_per_sec_average = 0;
+    for (let rate of this.eaten_creatures_per_sec_buffer)
+      this.eaten_creatures_per_sec_average += rate;
+    this.eaten_creatures_per_sec_average /= this.eaten_creatures_per_sec_buffer.length;
 
     return true;
   }
@@ -110,7 +132,7 @@ class CreaturesController {
     this.maximal_generation = 0;
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
-    this.maximal_eated_creatures = 0;
+    this.maximal_eaten_creatures = 0;
 
     //all creatures tick    
     let change = this.CREATURE_SATIETY_DOWNGRADE * time;
@@ -120,11 +142,22 @@ class CreaturesController {
 
       //interact other one
       let pos = creature.coordinates;
-      let near_creatures = this.map.cells[pos.x][pos.y].walking_creatures;
-      for (let id in near_creatures) {
-        if (id == creature.id || near_creatures[id].satiety >= creature.satiety)
+      let near_cells = [
+        this.map.cells[pos.x][pos.y],
+        this.map.cellAtCoordinates(pos.x - 1, pos.y),
+        this.map.cellAtCoordinates(pos.x - 1, pos.y - 1),
+        this.map.cellAtCoordinates(pos.x, pos.y - 1),
+        this.map.cellAtCoordinates(pos.x + 1, pos.y),
+        this.map.cellAtCoordinates(pos.x + 1, pos.y + 1),
+        this.map.cellAtCoordinates(pos.x, pos.y + 1),
+        this.map.cellAtCoordinates(pos.x - 1, pos.y + 1),
+        this.map.cellAtCoordinates(pos.x + 1, pos.y - 1),
+      ];
+      let near_creatures = [].concat.apply([], near_cells.map((cell) => Object.values(cell.walking_creatures)));
+      for (let c of near_creatures) {
+        if (c.id == creature.id || c.satiety >= creature.satiety)
           continue;
-        if (!creature.interact(near_creatures[id]))
+        if (!creature.interact(c))
           break;
       }
 
@@ -140,7 +173,7 @@ class CreaturesController {
       this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
       this.maximal_age = Math.max(this.maximal_age, creature.age);
       this.maximal_effectivity = Math.max(this.maximal_effectivity, creature.effectivity);
-      this.maximal_eated_creatures = Math.max(this.maximal_eated_creatures, creature.eated_creatures);
+      this.maximal_eaten_creatures = Math.max(this.maximal_eaten_creatures, creature.eaten_creatures);
 
       count++;
     }
@@ -307,8 +340,18 @@ class CreaturesController {
         }.bind(this))
       .addEventListener(
         "wanna_split",
-        function (pos) {
+        function () {
           this._splitCreature(creature);
+        }.bind(this))
+      .addEventListener(
+        "eaten",
+        function () {
+          this.eaten_creatures++;
+        }.bind(this))
+      .addEventListener(
+        "interaction",
+        function () {
+          this.interactions_per_tick++;
         }.bind(this));
   }
 
