@@ -153,12 +153,15 @@ class CreaturesController {
         this.map.cellAtCoordinates(pos.x - 1, pos.y + 1),
         this.map.cellAtCoordinates(pos.x + 1, pos.y - 1),
       ];
-      let near_creatures = [].concat.apply([], near_cells.map((cell) => Object.values(cell.walking_creatures)));
-      for (let c of near_creatures) {
-        if (c.id == creature.id || c.satiety >= creature.satiety)
-          continue;
-        if (!creature.interact(c))
-          break;
+      for (let cell of near_cells) {
+        let new_creatures = cell.walking_creatures;
+        for (let id in new_creatures) {
+          let c = new_creatures[id];
+          if (id == creature.id || c.satiety >= creature.satiety)
+            continue;
+          if (!creature.interact(c))
+            break;
+        }
       }
 
       //perform other actions
