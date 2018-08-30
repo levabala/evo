@@ -315,9 +315,9 @@ class VisualizerCanvas {
   }
 
   _addKeybindings() {
-    window.addEventListener("keypress", function (e) {
-      switch (e.keyCode) {
-        case 114:
+    window.addEventListener("keyup", function (e) {
+      switch (e.code) {
+        case "KeyR":
           this._autoAdjust();
           this.clearAll();
           this._updateViewBox();

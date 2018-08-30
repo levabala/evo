@@ -30,6 +30,7 @@ class Creature {
     this.interact_net = interact_net;
 
     //constants    
+    this.REST_FATIGUE_REMOVE = 0.005;
     this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
     this.SPLIT_SATIETY_NEEDED = 0.9;
@@ -81,8 +82,9 @@ class Creature {
   }
 
   actionsToDoCount(time) {
-    let fatigue_lost = time * this.FATIGUE_DONWGRADE;
-    return Math.floor(Math.max(fatigue_lost, 0) / this.ACTION_COST);
+    let fatigue_to_spend = time * this.FATIGUE_DONWGRADE - Math.max(this.fatigue, 0);
+    let actions = Math.floor(Math.max(fatigue_to_spend, 0) / this.ACTION_COST);
+    return actions;
   }
 
   timePerAction() {
@@ -96,19 +98,9 @@ class Creature {
     this.effectivity = this.satiety_gained / this.age * 1000;
     this._downGradeFatigue(time);
     if (this.fatigue <= 0) {
-      this._makeAction();
+      this._makeAction(time);
       this._checkForSplit();
     }
-    /*this.age += time;
-    this.split_cooldown -= time;
-    this.effectivity = this.satiety_gained / this.age * 1000;
-    if (isNaN(this.effectivity))
-      debugger;
-    this._downGradeFatigue(time);
-    if (this.fatigue <= 0) {
-      this._makeAction();
-      this._checkForSplit();
-    }*/
   }
 
   _downGradeFatigue(time) {
@@ -120,7 +112,7 @@ class Creature {
       this.split();
   }
 
-  _makeAction() {
+  _makeAction(time) {
     let input = this.request_control_net_input(this);
     let actions_weight = this.control_net.calc(input);
 
@@ -131,8 +123,12 @@ class Creature {
       )
     ];
 
-    action(this);
-    this.fatigue = Math.max(0, this.fatigue + this.ACTION_COST);
+    action(time, this);
+    this.fatigue = this.fatigue + this.ACTION_COST;
+  }
+
+  rest(time) {
+    this.fatigue = this.fatigue - this.REST_FATIGUE_REMOVE * time;
   }
 
   split() {
@@ -163,7 +159,7 @@ class Creature {
       )
     ];
 
-    action(this, creature);
+    action(0, this, creature);
 
     return true;
   }
@@ -208,8 +204,6 @@ class Creature {
     //console.log(`food lost: ${amount - effect}`);
 
     this.satiety_gained += effect / ((age_modificator == 0) ? 1 : age_modificator);
-    if (isNaN(this.satiety_gained))
-      debugger;
     this.satiety = Math.min(this.satiety + effect, 1);
     cell.food_amount -= amount;
     this._register_update();

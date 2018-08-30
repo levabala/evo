@@ -428,9 +428,9 @@ class CreaturesController {
   _generateControlNet() {
     //input: 
     //+ viewzone(9 cells -> x3(food_type + food_amount + is_sea))
-    //+ satiety 
+    //+ satiety + fatigue
     //+ 4 creatures per each direction (x2 -> food_type + satiety)    
-    //output: move_up/move_right/move_down/move_left/eat
+    //output: move_up/move_right/move_down/move_left/eat/rest
     let v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
@@ -469,6 +469,9 @@ class CreaturesController {
         //satiety
         [v, v, v, v, v, v, v, v],
 
+        //fatigue
+        [v, v, v, v, v, v, v, v],
+
         //creatures food_type
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -481,15 +484,15 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
       ], //input
       [
-        //5 outputs & 8 hidden neurons
-        [v, v, v, v, v],
-        [v, v, v, v, v],
-        [v, v, v, v, v],
-        [v, v, v, v, v],
-        [v, v, v, v, v],
-        [v, v, v, v, v],
-        [v, v, v, v, v],
-        [v, v, v, v, v],
+        //6 outputs & 8 hidden neurons
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
+        [v, v, v, v, v, v],
       ], //output
       new OneLayer(
         PROCESS_FUNCTIONS.Lineral_OneLimited
@@ -546,6 +549,9 @@ class CreaturesController {
 
       //satiety
       creature.satiety,
+
+      //fatigue
+      creature.fatigue,
 
       //creatures eating_type
       creatures.eating_type.top,
