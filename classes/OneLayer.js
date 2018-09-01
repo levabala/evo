@@ -26,3 +26,7 @@ class OneLayer {
     return new OneLayer(this.output_fun);
   }
 }
+
+OneLayer.fromJsonObject = function (obj) {
+  return new OneLayer(PROCESS_FUNCTIONS[obj.output_fun_name]);
+}

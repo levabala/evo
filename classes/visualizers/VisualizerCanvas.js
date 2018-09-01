@@ -183,7 +183,7 @@ class VisualizerCanvas {
     ctx.restore();
   }
 
-  _render_cells(forced) {
+  _render_cells(forced) {    
     let ctx = this.context_cells;
     ctx.save();
     if (forced)
@@ -200,7 +200,7 @@ class VisualizerCanvas {
         //let color = `hsl(210, 100%, ${new_food_amount * 100}%)`; //this._generateCellColor(cell);
         let color = this._generateCellColor(cell);
         ctx.fillStyle = color;
-        ctx.clearRect(x, y, 1, 1);
+        //ctx.clearRect(x, y, 1, 1);
         ctx.fillRect(x, y, 1, 1);
         cell._last_drawed_food_amount = new_food_amount;
         cell._last_drawed_type = cell.is_sea;
@@ -215,11 +215,14 @@ class VisualizerCanvas {
     //ctx.clearRect(0, 0, this.width, this.height);
     let skipped = 0;
     let skipped_position = 0;
+    let drawed_creatures = 0;
     for (let creature of Object.values(this.creatures_controller.creatures)) {
       let x = creature.coordinates.x;
       let y = creature.coordinates.y;
       let pre_processed = creature.id in this.creatures_drawed;
       let drawed = this.creatures_drawed[creature.id];
+      if (!pre_processed && (!this._x_draw_range.isIn(x, true) || !this._y_draw_range.isIn(y, true)))
+        continue;
       if (pre_processed && (!this._x_draw_range.isIn(drawed.x, true) || !this._y_draw_range.isIn(drawed.y, true))) {
         skipped_position++;
         continue;
@@ -234,11 +237,11 @@ class VisualizerCanvas {
       const trigger_move = 1;
       const trigger_size = 0.1
       if (!forced && pre_processed &&
-        !(
-          Math.abs(drawed.x - x) >= trigger_move ||
-          Math.abs(drawed.y - y) >= trigger_move ||
-          Math.abs(drawed.size - size) >= trigger_size
-        )) {
+        
+          Math.abs(drawed.x - x) < trigger_move &&
+          Math.abs(drawed.y - y) < trigger_move &&
+          Math.abs(drawed.size - size) < trigger_size
+        ) {
         skipped++;
         continue;
       }
@@ -250,18 +253,20 @@ class VisualizerCanvas {
         color: color,
         x: x,
         y: y
-      }
+      }      
 
-      ctx.fillStyle = color;
-      ctx.strokeStyle = color;
-      ctx.fillRect(x + 0.5 - size / 2, y + 0.5 - size / 2, size, size);
+      ctx.fillStyle = color;      
+      ctx.fillRect(x + 0.5 - size / 2, y + 0.5 - size / 2, size, size);      
+
+      drawed_creatures++;   
+      //console.log(x,y,size,color)     
     }
     //console.log(skipped, skipped_position)
-    ctx.restore();
+    ctx.restore();    
   }
 
   _getCreatureSize(creature) {
-    return creature.satiety * 0.7;
+    return Math.max(creature.satiety, 0.2) * 0.7;
   }
 
   _generateCellColor(cell) {

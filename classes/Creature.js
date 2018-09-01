@@ -236,11 +236,14 @@ class Creature {
   }
 }
 
-Creature.prototype.fromJsonObject = function (id, coordinates, satiety, toxicity_resistance, obj) {
+Creature.fromJsonObject = function (
+  obj, id, coordinates, satiety, toxicity_resistance,
+  food_variety, max_age, request_control_net_input, request_interact_net_input
+) {
   let creature = new Creature(
     id, coordinates, satiety, toxicity_resistance, obj.eating_type,
-    request_control_net_input, request_interact_net_input, obj.control_net,
-    obj.interact_net, food_variety, max_age
+    request_control_net_input, request_interact_net_input, NeuralNetwork.fromJsonObject(obj.control_net),
+    NeuralNetwork.fromJsonObject(obj.interact_net), food_variety, max_age
   );
   return creature;
 };

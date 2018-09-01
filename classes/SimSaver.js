@@ -13,6 +13,37 @@ class SimSaver {
     this.check();
   }
 
+  get allSessions() {
+    let sessions = {};
+    store.each((el, session_id) => {
+      if (Object.keys(el).length > 0)
+        sessions[session_id] = el;
+    });
+    return sessions;
+  }
+
+  get allSessionsAsArrays() {
+    let sessions = {};
+    store.each((el, session_id) => {
+      if (Object.keys(el).length > 0)
+        sessions[session_id] = Object.values(el);
+    });
+    return sessions;
+  }
+
+  get allSavedCreatures() {
+    let creatures = [];
+    store.each((el, session_id) => {
+      creatures = creatures.concat(Object.values(el));
+    });
+    creatures = creatures.sort((a, b) => {
+      if (a.generation > b.generation)
+        return -1;
+      else return 1;
+    });
+    return creatures;
+  }
+
   check() {
     let saved = Object.values(this.saved_creatures);
     let replace = (who, whom, obj) => {
@@ -32,13 +63,13 @@ class SimSaver {
       let obj = creature.generateJsonObjectConstructor();
       let less_generation = saved.filter(
         (saved_c) =>
-        creature.generation > saved_c.generation
+          creature.generation > saved_c.generation
       );
       if (less_generation.length > 0) {
         //check for replace similiar
         let similiar = less_generation.filter(
           (saved_c) =>
-          Math.abs(creature.population_id - saved_c.population_id) < this.MIN_POPULATION_ID_DIFF
+            Math.abs(creature.population_id - saved_c.population_id) < this.MIN_POPULATION_ID_DIFF
         );
         if (similiar.length > 0) {
           let to_replace = similiar.sort((a, b) => b.generation > a.generation ? 1 : -1)[0];

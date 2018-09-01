@@ -11,6 +11,7 @@ class CreaturesController {
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
     this.maximal_eaten_creatures = 0;
+    this.maximal_actions_count = 0;
     this.last_tick_timecode = Date.now();
     this.sim_speed = 1;
     this.creatures_density = 0;
@@ -22,6 +23,7 @@ class CreaturesController {
     this.interaction_per_sec = 0;
     this.interaction_per_sec_buffer = [];
     this.interaction_per_sec_average = 0;
+
 
     //constants    
     this.MINIMAL_CREATURES_DENSITY = 0.005; //creatures per cell
@@ -78,6 +80,8 @@ class CreaturesController {
         return Math.min(time_per_action, creature.timePerAction());
       }, Number.MAX_SAFE_INTEGER
     );
+    this.maximal_actions_count = max_actions_count;
+
     if (max_actions_count == 0)
       return false;
 
@@ -103,8 +107,8 @@ class CreaturesController {
 
     this.eaten_creatures_rate =
       this.interactions_per_tick > 0 ?
-      this.eaten_creatures / this.interactions_per_tick :
-      0;
+        this.eaten_creatures / this.interactions_per_tick :
+        0;
 
     this.eaten_creatures_per_sec_buffer.push(this.eaten_creatures_rate);
     if (this.eaten_creatures_per_sec_buffer.length > 5)
@@ -125,7 +129,7 @@ class CreaturesController {
       this._generateAndAddCreature();
       this.new_creature_buffer--;
     }
-    while (this._checkCreaturesLimit()) {}
+    while (this._checkCreaturesLimit()) { }
   }
 
   _internal_tick(time) {
@@ -221,7 +225,7 @@ class CreaturesController {
           return false;
         let cell_creatures_count = Object.keys(
           this.map.cellAtPoint.bind(map)(pos)
-          .walking_creatures).length;
+            .walking_creatures).length;
         return cell_creatures_count == 0;
       }.bind(this)
     );
@@ -236,8 +240,8 @@ class CreaturesController {
     ]);
     let new_creature =
       creature.clone()
-      .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
-      .mutateNets(this.CHILD_NET_MUTATE_RANGE);
+        .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
+        .mutateNets(this.CHILD_NET_MUTATE_RANGE);
     new_creature.coordinates = spawn_position;
     new_creature.satiety = this.NEW_CREATURE_SATIETY;
     this.creatures_counter++;
@@ -286,15 +290,41 @@ class CreaturesController {
     this.addCreature((this._generateCreature(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE)));
   }
 
+  pushCreatures(creature_dump, count) {
+    for (let i = 0; i < count; i++) {
+      let creature = this.pushCreature(
+        creature_dump, this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE
+      );
+    }
+  }
+
+  pushCreature(creature_dump, x_range, y_range) {
+    this.creatures_counter++;
+    let creature = Creature.fromJsonObject(
+      creature_dump,
+      this.creatures_counter,
+      this._generateSpawnPosition(x_range, y_range),
+      this.NEW_CREATURE_SATIETY,
+      this.TOXICIETY_RESISTANCE,
+      this.NEW_CREATURE_FOOD_VARIETY,
+      this.NEW_CREATURE_MAX_AGE,
+      this._generateControlNetInput.bind(this),
+      this._generateCreatureInteractInput.bind(this)
+    )
+    this._processNewCreature(creature);
+    this.addCreature(creature);
+    return creature;
+  }
+
   _generateCreature(x_range, y_range) {
     this.creatures_counter++;
     var creature = new Creature(
       this.creatures_counter,
-      new P(Math.floor(x_range.generateNumber()), Math.floor(y_range.generateNumber())),
+      this._generateSpawnPosition(x_range, y_range),
       this.NEW_CREATURE_SATIETY,
       this.TOXICIETY_RESISTANCE,
       Math.random(),
-      this._generateNetInput.bind(this),
+      this._generateControlNetInput.bind(this),
       this._generateCreatureInteractInput.bind(this),
       this._generateControlNet(),
       this._generateCreatureInteractNet(),
@@ -303,6 +333,22 @@ class CreaturesController {
     );
     this._processNewCreature(creature);
     return creature;
+  }
+
+  _generateSpawnPosition(x_range, y_range) {
+    const generateNewPos = () => {
+      return new P(Math.floor(x_range.generateNumber()), Math.floor(y_range.generateNumber()));
+    };
+    const checkIfNotSea = (p) => {
+      return !this.map.cells[p.x][p.y].isSea;
+    };
+    let pos;
+    let checkNext = () => {
+      pos = generateNewPos();
+      return checkIfNotSea(pos);
+    };
+    while (!checkNext()) { };
+    return pos;
   }
 
   _generateCreatureAtPosition(pos) {
@@ -510,7 +556,7 @@ class CreaturesController {
     ]
   }
 
-  _generateNetInput(creature) {
+  _generateControlNetInput(creature) {
     let view_zone = this.viewZoneGetter(creature.coordinates);
     let creatures = this._generateCreaturesInput(view_zone);
     return [

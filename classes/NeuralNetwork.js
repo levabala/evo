@@ -21,21 +21,6 @@ class NeuralNetwork {
     this.MAX_WEIGHT = 10; //TODO: apply it
   }
 
-  toString() {
-    return `input_weights: ${this.input_weights}\noutput_weights: ${this.output_weights}\nhidden_layer: ${this.hidden_layer}\ninput_fun: ${this.input_fun}\noutput_fun: ${this.output_fun}`;
-  }
-
-  toJsonObject() {
-    return {
-      type: this.name,
-      intput_weight: this.input_weights,
-      output_weights: this.output_weights,
-      hidden_layer: this.hidden_layer.toJsonObject,
-      input_fun_name: this.input_fun.name,
-      output_fun_name: this.output_fun.name
-    }
-  }
-
   clone() {
     let cloned_net = new NeuralNetwork(
       clone2dArr(this.input_weights), clone2dArr(this.output_weights),
@@ -110,4 +95,31 @@ class NeuralNetwork {
     for (let e = 0; e < d.length; e++) d[e] = this.output_fun(d[e]);
     return d
   }
+
+  toString() {
+    return `input_weights: ${this.input_weights}\noutput_weights: ${this.output_weights}\nhidden_layer: ${this.hidden_layer}\ninput_fun: ${this.input_fun}\noutput_fun: ${this.output_fun}`;
+  }
+
+  toJsonObject() {
+    return {
+      type: this.name,
+      input_weights: this.input_weights,
+      output_weights: this.output_weights,
+      hidden_layer: this.hidden_layer.toJsonObject,
+      input_fun_name: this.input_fun.name,
+      output_fun_name: this.output_fun.name
+    };
+  }
+}
+
+NeuralNetwork.fromJsonObject = function (obj) {
+  //INVALID FOR ALL EXCEPT OneLayer NETS!  
+  return new NeuralNetwork(
+    obj.input_weights || obj.intput_weight, obj.output_weights,
+    (obj.hidden_layer
+      ? new NEURAL_NETS[obj.hidden_layer.type](obj.hidden_layer.output_fun_name)
+      : new NEURAL_NETS["OneLayer"](PROCESS_FUNCTIONS.Lineral_OneLimited)),
+    PROCESS_FUNCTIONS[obj.input_fun_name],
+    PROCESS_FUNCTIONS[obj.output_fun_name]
+  )
 }

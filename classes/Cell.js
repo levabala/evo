@@ -21,6 +21,8 @@ class Cell {
     //constants
     this.MAX_FOOD_AMOUNT = 0.5;
 
+    this.food_amount = this.MAX_FOOD_AMOUNT;
+
     this._do_all_stuff(0);
   }
 
