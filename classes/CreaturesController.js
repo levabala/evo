@@ -107,8 +107,8 @@ class CreaturesController {
 
     this.eaten_creatures_rate =
       this.interactions_per_tick > 0 ?
-        this.eaten_creatures / this.interactions_per_tick :
-        0;
+      this.eaten_creatures / this.interactions_per_tick :
+      0;
 
     this.eaten_creatures_per_sec_buffer.push(this.eaten_creatures_rate);
     if (this.eaten_creatures_per_sec_buffer.length > 5)
@@ -129,7 +129,7 @@ class CreaturesController {
       this._generateAndAddCreature();
       this.new_creature_buffer--;
     }
-    while (this._checkCreaturesLimit()) { }
+    while (this._checkCreaturesLimit()) {}
   }
 
   _internal_tick(time) {
@@ -225,7 +225,7 @@ class CreaturesController {
           return false;
         let cell_creatures_count = Object.keys(
           this.map.cellAtPoint.bind(map)(pos)
-            .walking_creatures).length;
+          .walking_creatures).length;
         return cell_creatures_count == 0;
       }.bind(this)
     );
@@ -240,8 +240,8 @@ class CreaturesController {
     ]);
     let new_creature =
       creature.clone()
-        .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
-        .mutateNets(this.CHILD_NET_MUTATE_RANGE);
+      .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
+      .mutateNets(this.CHILD_NET_MUTATE_RANGE);
     new_creature.coordinates = spawn_position;
     new_creature.satiety = this.NEW_CREATURE_SATIETY;
     this.creatures_counter++;
@@ -339,15 +339,12 @@ class CreaturesController {
     const generateNewPos = () => {
       return new P(Math.floor(x_range.generateNumber()), Math.floor(y_range.generateNumber()));
     };
-    const checkIfNotSea = (p) => {
-      return !this.map.cells[p.x][p.y].isSea;
-    };
     let pos;
     let checkNext = () => {
       pos = generateNewPos();
-      return checkIfNotSea(pos);
+      return this.map.cells[pos.x][pos.y].isSea;
     };
-    while (!checkNext()) { };
+    while (checkNext()) {}
     return pos;
   }
 

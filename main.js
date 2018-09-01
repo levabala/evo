@@ -3,7 +3,7 @@ var div_graph_population = document.getElementById("div_graph2");
 var div_graph_generation = document.getElementById("div_graph1");
 var div_info = document.getElementById("div_info");
 var range_sim_speed = document.getElementById("range_sim_speed");
-var size = 700;
+var size = 1000;
 var coeff_x = 16 / 25;
 var coeff_y = 9 / 25;
 var plot_population = new SimplePlot(div_graph_population, 100, "darkgreen");
@@ -46,10 +46,10 @@ setTimeout(function () {
     new SimObserver(master)
     .addEventListener("updates", function () {
 
-      plot_population.applyDataSimple(
+      /*plot_population.applyDataSimple(
         _.takeRight(sim_observer.logs.creatures_count, 300)
       );
-      /*plot_generation.applyDataSimple(
+      plot_generation.applyDataSimple(
         _.takeRight(sim_observer.logs.max_generation, 300)
       );*/
     })

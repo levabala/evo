@@ -17,11 +17,16 @@ class SimMap {
     this.change_sea_timeout = 0;
     this.sea_cells_count = 0;
 
+    //sea props
+    this.change_sea_rate = 16;
+    this.changing_sea = 128;
+
     //constants
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
     this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
-    this.SEA_RATE_CHANGE_RATE = 0.003;
-    this.SEA_GLOBAL_LEVEL = 0.6;
+    this.SEA_RATE_CHANGE_RATE = 0.007; //0.003;
+    this.SEA_LEVEL_CHANGE_RATE = 0.001; //0.003;
+    this.SEA_GLOBAL_LEVEL = 0.5;
     this.SEA_CHANGE_INTERVAL_SECS = 10;
 
     //events
@@ -34,7 +39,7 @@ class SimMap {
   checkForChange(time) {
     this.change_sea_timeout -= time;
     while (this.change_sea_timeout <= 0) {
-      this._changeSeaRate(this.SEA_RATE_CHANGE_RATE);
+      this._changeSea(this.SEA_RATE_CHANGE_RATE, this.SEA_LEVEL_CHANGE_RATE);
       this.change_sea_timeout += this.SEA_CHANGE_INTERVAL_SECS * 1000;
     }
   }
@@ -52,15 +57,13 @@ class SimMap {
   _generateMapPerlin() {
     map = [];
 
-    const changing_sea_rate = 256;
     let sea_rate_seed = Math.random();
     let sea_rate_height = 0;
-    let sea_rate_map = this._createPerlinMap(changing_sea_rate, sea_rate_seed, sea_rate_height);
+    let sea_rate_map = this._createPerlinMap(this.changing_sea_rate, sea_rate_seed, sea_rate_height);
 
-    const changing_sea = 32;
     let sea_level_seed = Math.random();
     let sea_level_height = 0;
-    let sea_map = this._createPerlinMap(changing_sea, sea_level_seed, sea_level_height);
+    let sea_map = this._createPerlinMap(this.changing_sea, sea_level_seed, sea_level_height);
 
     const changing_food = 64;
     let food_type_seed = Math.random();
@@ -98,24 +101,29 @@ class SimMap {
     return level > (1 - rate * this.SEA_GLOBAL_LEVEL);
   }
 
-  _changeSeaRate(rate_diff) {
-    const changing_sea_rate = 256;
+  _changeSea(rate_diff, level_diff) {
     let sea_rate_height = this.last_sea_rate_height + Math.random() * rate_diff;
-    let sea_rate_map = this._createPerlinMap(changing_sea_rate, this.last_sea_rate_seed, sea_rate_height);
+    let sea_level_height = this.last_sea_level_height + Math.random() * level_diff;
+    let sea_rate_map = this._createPerlinMap(this.change_sea_rate, this.last_sea_rate_seed, sea_rate_height);
+    let sea_map = this._createPerlinMap(this.changing_sea, this.last_sea_level_seed, sea_level_height);
 
     this.sea_cells_count = 0;
     for (var x = 0; x < this.width; x++)
       for (var y = 0; y < this.height; y++) {
         let cell = this.cells[x][y];
-        let is_sea = this._isSea(cell.sea_level, sea_rate_map[x][y]);
+        let sea_level = sea_map[x][y];
+        let sea_rate = sea_rate_map[x][y];
+        let is_sea = this._isSea(sea_level, sea_rate);
         if (is_sea)
           this.sea_cells_count++;
         cell.is_sea = is_sea;
-        cell.sea_rate = sea_rate_map[x][y];
+        cell.sea_rate = sea_rate;
+        cell.sea_level = sea_level;
         //cell.fertility = !is_sea ? this.fertility_base + (Math.random() - 1) * 2 * this.fertility_range : 0;        
       }
 
     this.last_sea_rate_height = sea_rate_height;
+    this.last_sea_level_height = sea_level_height;
 
     this.dispatchEvent("sea_changed");
   }
