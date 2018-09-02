@@ -2,8 +2,8 @@ class Cell {
   constructor(
     coordinates, fertility = 0.1, food_type = Math.random(), is_sea = false,
     sea_level = 0, sea_rate = 0, toxicity = 0,
-    detoxification_rate = 0.1, food_amount = 0) {
-
+    detoxification_rate = 0.1, food_amount = 0,
+  ) {
     this.coordinates = coordinates;
     this.food_type = food_type;
     this.food_amount = food_amount;
@@ -18,10 +18,12 @@ class Cell {
     this.sea_level = sea_level;
     this.sea_rate = sea_rate;
 
-    //constants
+    // constants
     this.MAX_FOOD_AMOUNT = 0.5;
+    this.AMOUNT_CHANGE_TRIGGER = this.MAX_FOOD_AMOUNT * 0.2;
+    this.TIME_TRIGGER = this.AMOUNT_CHANGE_TRIGGER / this.fertility; // 0.1 = fertility * time
 
-    this.food_amount = this.MAX_FOOD_AMOUNT;
+    // this.food_amount = this.MAX_FOOD_AMOUNT;
 
     this._do_all_stuff(0);
   }
@@ -30,18 +32,17 @@ class Cell {
     if (this.is_sea)
       return this;
 
-    let delta = (timecode - this.last_update_timecode) * sim_speed;
-    this.last_update_timecode = Math.max(timecode, this.last_update_timecode);
+    const delta = (timecode - this.last_update_timecode) * sim_speed;
+    if (delta < this.TIME_TRIGGER)
+      return this;
 
-    if (delta == undefined)
-      debugger;
+    this.last_update_timecode = Math.max(timecode, this.last_update_timecode);
 
     if (delta > 0)
       this._do_all_stuff(delta);
     if (delta < 0) {
-      let dd = (timecode - this.last_update_timecode) * sim_speed;
-      let a = dd * 23;
-      debugger;
+      const dd = (timecode - this.last_update_timecode) * sim_speed;
+      const a = dd * 23;
     }
 
     return this;
@@ -53,7 +54,7 @@ class Cell {
   }
 
   grow(time) {
-    //console.log(Math.round(this.fertility * time * 100) / 100);
+    // console.log(Math.round(this.fertility * time * 100) / 100);
     this.food_amount += this.fertility * time;
     this.food_amount = Math.max(Math.min(this.food_amount, this.MAX_FOOD_AMOUNT), 0);
   }

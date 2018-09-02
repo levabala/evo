@@ -1,12 +1,12 @@
 const times = [];
 
-//fps counter
+// fps counter
 function refreshLoop() {
   window.requestAnimationFrame(() => {
     const now = performance.now();
-    while (times.length > 0 && times[0] <= now - 1000) {
+    while (times.length > 0 && times[0] <= now - 1000)
       times.shift();
-    }
+
     times.push(now);
     window.FPS = times.length;
     refreshLoop();
@@ -20,7 +20,7 @@ function guid() {
       .toString(16)
       .substring(1);
   }
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+  return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
 }
 
 class Range {
@@ -42,8 +42,7 @@ class Range {
       include && (this.from > value || this.to < value) ||
       !include && (this.from >= value || this.to <= value))
       return false;
-    else
-      return true;
+    return true;
   }
 
   generateNumber() {
@@ -81,7 +80,7 @@ class P {
   }
 
   toString() {
-    return this.x + ":" + this.y;
+    return `${this.x}:${this.y}`;
   }
 }
 
@@ -90,15 +89,13 @@ function cloneObj(obj) {
 }
 
 function clone2dArr(array) {
-  return array.map(function (arr) {
-    return arr.slice();
-  });
+  return array.map(arr => arr.slice());
 }
 
 function creatureWorkerURL(worker_function) {
   return URL.createObjectURL(
-    new Blob(["(" + worker_function.toString() + ")()"], {
-      type: 'text/javascript'
-    })
+    new Blob([`(${worker_function.toString()})()`], {
+      type: "text/javascript",
+    }),
   );
 }

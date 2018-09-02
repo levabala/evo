@@ -1,6 +1,6 @@
 class CreaturesController {
   constructor(map) {
-    //add reactor
+    // add reactor
     Reactor.apply(this, []);
 
     this.map = map;
@@ -25,8 +25,8 @@ class CreaturesController {
     this.interaction_per_sec_average = 0;
 
 
-    //constants    
-    this.MINIMAL_CREATURES_DENSITY = 0.005; //creatures per cell
+    // constants
+    this.MINIMAL_CREATURES_DENSITY = 0.005; // creatures per cell
     this.NEW_CREATURE_SATIETY = 0.3;
     this.SPLIT_COST = 0.5;
     this.TOXICIETY_RESISTANCE = 0.05;
@@ -48,13 +48,13 @@ class CreaturesController {
     this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL = 0.0003;
     this.MAX_NEW_CREATURES_AT_ONCE = 1000000;
 
-    //other    
+    // other
     this.new_creature_buffer = 0;
     this.new_random_creautures_createn = 0;
     this._time_buffer_1 = 0;
     this._time_buffer_2 = 0;
 
-    //events    
+    // events
     this.registerEvent(this.NEW_CREATURE_EVENT);
     this.registerEvent(this.DEAD_CREATURE_EVENT);
     this.registerEvent(this.MOVE_CREATURE_EVENT);
@@ -65,44 +65,46 @@ class CreaturesController {
   tick(time, timecode, tick_length, sim_speed) {
     this.sim_speed = sim_speed;
 
-    let real_delta = timecode - this.last_tick_timecode;
-    let sim_delta = real_delta * sim_speed;
+    const real_delta = timecode - this.last_tick_timecode;
+    const sim_delta = real_delta * sim_speed;
 
     this._auto_add_creatures(0);
-    let creatures = Object.values(this.creatures);
-    let max_actions_count = creatures.reduce(
-      (max_count, creature) => {
-        return Math.max(max_count, creature.actionsToDoCount(sim_delta));
-      }, 0
+    const creatures = Object.values(this.creatures);
+    const max_actions_count = creatures.reduce(
+      (max_count, creature) => Math.max(max_count, creature.actionsToDoCount(sim_delta)), 0,
     );
-    let min_time_per_action = creatures.reduce(
-      (time_per_action, creature) => {
-        return Math.min(time_per_action, creature.timePerAction());
-      }, Number.MAX_SAFE_INTEGER
+    const min_time_per_action = creatures.reduce(
+      (time_per_action, creature) => Math.min(time_per_action, creature.timePerAction()),
+      Number.MAX_SAFE_INTEGER,
     );
     this.maximal_actions_count = max_actions_count;
 
-    if (max_actions_count == 0)
+    if (max_actions_count === 0)
       return false;
 
-    this.eaten_creatures = this.interactions_per_tick = 0;
+    this.eaten_creatures = 0;
+    this.interactions_per_tick = 0;
 
-    let real_time_per_tick = min_time_per_action / sim_speed;
-    let sim_time_per_tick = min_time_per_action;
+    const real_time_per_tick = min_time_per_action / sim_speed;
+    const sim_time_per_tick = min_time_per_action;
     for (let i = 0; i < max_actions_count; i++) {
       this._auto_add_creatures(sim_time_per_tick);
       this._internal_tick(sim_time_per_tick);
       this.last_tick_timecode += real_time_per_tick;
     }
 
-    this.interaction_per_sec = this.interactions_per_tick / sim_time_per_tick / max_actions_count * 1000;
+    this.interaction_per_sec =
+      this.interactions_per_tick /
+      sim_time_per_tick /
+      max_actions_count *
+      1000;
     this.interaction_per_sec_buffer.push(this.interaction_per_sec);
     if (this.interaction_per_sec_buffer.length > 5)
       this.interaction_per_sec_buffer.shift();
 
     this.interaction_per_sec_average = 0;
-    for (let rate of this.interaction_per_sec_buffer)
-      this.interaction_per_sec_average += rate;
+    for (let i = 0; i < this.interaction_per_sec_buffer.length; i++)
+      this.interaction_per_sec_average += this.interaction_per_sec_buffer[i];
     this.interaction_per_sec_average /= this.interaction_per_sec_buffer.length;
 
     this.eaten_creatures_rate =
@@ -115,15 +117,18 @@ class CreaturesController {
       this.eaten_creatures_per_sec_buffer.shift();
 
     this.eaten_creatures_per_sec_average = 0;
-    for (let rate of this.eaten_creatures_per_sec_buffer)
-      this.eaten_creatures_per_sec_average += rate;
+    for (let i = 0; i < this.eaten_creatures_per_sec_buffer.length; i++)
+      this.eaten_creatures_per_sec_average += this.eaten_creatures_per_sec_buffer[i];
     this.eaten_creatures_per_sec_average /= this.eaten_creatures_per_sec_buffer.length;
 
     return true;
   }
 
   _auto_add_creatures(time) {
-    this.new_creature_buffer += time / 1000 * (this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL * this.map.width * this.map.height);
+    this.new_creature_buffer +=
+      time /
+      1000 *
+      (this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL * this.map.width * this.map.height);
     this.new_creature_buffer = Math.min(this.MAX_NEW_CREATURES_AT_ONCE, this.new_creature_buffer);
     while (this.new_creature_buffer > 1) {
       this._generateAndAddCreature();
@@ -138,15 +143,16 @@ class CreaturesController {
     this.maximal_effectivity = 0;
     this.maximal_eaten_creatures = 0;
 
-    //all creatures tick    
-    let change = this.CREATURE_SATIETY_DOWNGRADE * time;
+    // all creatures tick
+    const change = this.CREATURE_SATIETY_DOWNGRADE * time;
     let count = 0;
-    for (let id in this.creatures) {
-      let creature = this.creatures[id];
+    const creatures = Object.values(this.creatures);
+    for (let i = 0; i < creatures.length; i++) {
+      const creature = creatures[i];
 
-      //interact other one
-      let pos = creature.coordinates;
-      let near_cells = [
+      // interact other one
+      const pos = creature.coordinates;
+      const near_cells = [
         this.map.cells[pos.x][pos.y],
         this.map.cellAtCoordinates(pos.x - 1, pos.y),
         this.map.cellAtCoordinates(pos.x - 1, pos.y - 1),
@@ -157,30 +163,37 @@ class CreaturesController {
         this.map.cellAtCoordinates(pos.x - 1, pos.y + 1),
         this.map.cellAtCoordinates(pos.x + 1, pos.y - 1),
       ];
-      for (let cell of near_cells) {
-        let new_creatures = cell.walking_creatures;
-        for (let id in new_creatures) {
-          let c = new_creatures[id];
-          if (id == creature.id || c.satiety >= creature.satiety)
-            continue;
-          if (!creature.interact(c))
+      for (let i2 = 0; i2 < near_cells.length; i2++) {
+        const cell = near_cells[i2];
+        const new_creatures = Object.values(cell.walking_creatures);
+        for (let i3 = 0; i3 < new_creatures.length; i3++) {
+          const c = new_creatures[i3];
+          if (
+            c.id !== creature.id &&
+            c.satiety >= creature.satiety &&
+            !creature.interact(c)
+          )
             break;
         }
       }
 
-      //perform other actions
+      // perform other actions
       creature.tick(time);
 
-      //downgrade
+      // downgrade
       creature.satiety -= change;
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature);
 
-      //statistic
-      this.maximal_generation = Math.max(this.maximal_generation, creature.generation);
-      this.maximal_age = Math.max(this.maximal_age, creature.age);
-      this.maximal_effectivity = Math.max(this.maximal_effectivity, creature.effectivity);
-      this.maximal_eaten_creatures = Math.max(this.maximal_eaten_creatures, creature.eaten_creatures);
+      // statistic
+      this.maximal_generation =
+        Math.max(this.maximal_generation, creature.generation);
+      this.maximal_age =
+        Math.max(this.maximal_age, creature.age);
+      this.maximal_effectivity =
+        Math.max(this.maximal_effectivity, creature.effectivity);
+      this.maximal_eaten_creatures =
+        Math.max(this.maximal_eaten_creatures, creature.eaten_creatures);
 
       count++;
     }
@@ -192,54 +205,54 @@ class CreaturesController {
     this.creatures_counter = 0;
   }
 
-  viewZoneGetter(pos) {
-    let view_zone = {
-      left: this.map.cellAtPoint(pos.clone().move(-1, 0)).update(this.last_tick_timecode, this.sim_speed),
-      left2: this.map.cellAtPoint(pos.clone().move(-2, 0)).update(this.last_tick_timecode, this.sim_speed),
-      right: this.map.cellAtPoint(pos.clone().move(1, 0)).update(this.last_tick_timecode, this.sim_speed),
-      right2: this.map.cellAtPoint(pos.clone().move(2, 0)).update(this.last_tick_timecode, this.sim_speed),
-      top: this.map.cellAtPoint(pos.clone().move(0, -1)).update(this.last_tick_timecode, this.sim_speed),
-      top2: this.map.cellAtPoint(pos.clone().move(0, -2)).update(this.last_tick_timecode, this.sim_speed),
-      bottom: this.map.cellAtPoint(pos.clone().move(0, 1)).update(this.last_tick_timecode, this.sim_speed),
-      bottom2: this.map.cellAtPoint(pos.clone().move(0, 2)).update(this.last_tick_timecode, this.sim_speed),
-      center: this.map.cells[pos.x][pos.y].update(this.last_tick_timecode, this.sim_speed)
+  viewZoneGetter(p) {
+    const view_zone = {
+      left: this.map.cellAtCoordinates(p.x - 1, p.y).update(this.last_tick_timecode, this.sim_speed),
+      left2: this.map.cellAtCoordinates(p.x - 2, p.y).update(this.last_tick_timecode, this.sim_speed),
+      right: this.map.cellAtCoordinates(p.x + 1, p.y).update(this.last_tick_timecode, this.sim_speed),
+      right2: this.map.cellAtCoordinates(p.x + 2, p.y).update(this.last_tick_timecode, this.sim_speed),
+      top: this.map.cellAtCoordinates(p.x, p.y - 1).update(this.last_tick_timecode, this.sim_speed),
+      top2: this.map.cellAtCoordinates(p.x, p.y - 2).update(this.last_tick_timecode, this.sim_speed),
+      bottom: this.map.cellAtCoordinates(p.x, p.y + 1).update(this.last_tick_timecode, this.sim_speed),
+      bottom2: this.map.cellAtCoordinates(p.x, p.y + 2).update(this.last_tick_timecode, this.sim_speed),
+      center: this.map.cells[p.x][p.y].update(this.last_tick_timecode, this.sim_speed),
     };
+
 
     return view_zone;
   }
 
   _splitCreature(creature) {
-    let center = creature.coordinates;
+    const center = creature.coordinates;
 
-    //square 3x3 without the center
-    let deltas = [
+    // square 3x3 without the center
+    const deltas = [
       new P(1, 0), new P(1, 1), new P(0, 1),
       new P(-1, 1), new P(-1, 0), new P(-1, -1),
-      new P(0, -1), new P(1, -1)
+      new P(0, -1), new P(1, -1),
     ];
 
-    let free_deltas = deltas.filter(
-      function (delta) {
-        let pos = center.clone().add(delta);
+    const free_deltas = deltas.filter(
+      (delta) => {
+        const pos = center.clone().add(delta);
         if (!pos.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE))
           return false;
-        let cell_creatures_count = Object.keys(
-          this.map.cellAtPoint.bind(map)(pos)
-          .walking_creatures).length;
-        return cell_creatures_count == 0;
-      }.bind(this)
+        const cell_creatures_count = Object.keys(
+          this.map.cellAtPoint.bind(map)(pos).walking_creatures,
+        ).length;
+        return cell_creatures_count === 0;
+      },
     );
-    if (free_deltas.length == 0) {
+    if (free_deltas.length === 0)
       return;
-    }
 
-    let spawn_position = center.clone().add(free_deltas[
+
+    const spawn_position = center.clone().add(free_deltas[
       Math.floor(
-        Math.random() * (free_deltas.length - 1)
+        Math.random() * (free_deltas.length - 1),
       )
     ]);
-    let new_creature =
-      creature.clone()
+    const new_creature = creature.clone()
       .mutateProps(this.CHILD_PROPS_MUTATE_RANGE)
       .mutateNets(this.CHILD_NET_MUTATE_RANGE);
     new_creature.coordinates = spawn_position;
@@ -268,8 +281,8 @@ class CreaturesController {
   }
 
   _creaturesDensity() {
-    let creatures_count = Object.keys(this.creatures).length;
-    let density = creatures_count == 0 ? 0 : creatures_count / (this.map.width * this.map.height - this.map.sea_cells_count);
+    const creatures_count = Object.keys(this.creatures).length;
+    const density = creatures_count === 0 ? 0 : creatures_count / (this.map.width * this.map.height - this.map.sea_cells_count);
     this.creatures_density = density;
     return density;
   }
@@ -292,15 +305,15 @@ class CreaturesController {
 
   pushCreatures(creature_dump, count) {
     for (let i = 0; i < count; i++) {
-      let creature = this.pushCreature(
-        creature_dump, this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE
+      this.pushCreature(
+        creature_dump, this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE,
       );
     }
   }
 
   pushCreature(creature_dump, x_range, y_range) {
     this.creatures_counter++;
-    let creature = Creature.fromJsonObject(
+    const creature = Creature.fromJsonObject(
       creature_dump,
       this.creatures_counter,
       this._generateSpawnPosition(x_range, y_range),
@@ -309,8 +322,8 @@ class CreaturesController {
       this.NEW_CREATURE_FOOD_VARIETY,
       this.NEW_CREATURE_MAX_AGE,
       this._generateControlNetInput.bind(this),
-      this._generateCreatureInteractInput.bind(this)
-    )
+      this.constructor._generateCreatureInteractInput,
+    );
     this._processNewCreature(creature);
     this.addCreature(creature);
     return creature;
@@ -318,31 +331,30 @@ class CreaturesController {
 
   _generateCreature(x_range, y_range) {
     this.creatures_counter++;
-    var creature = new Creature(
+    const creature = new Creature(
       this.creatures_counter,
       this._generateSpawnPosition(x_range, y_range),
       this.NEW_CREATURE_SATIETY,
       this.TOXICIETY_RESISTANCE,
       Math.random(),
       this._generateControlNetInput.bind(this),
-      this._generateCreatureInteractInput.bind(this),
+      this.constructor._generateCreatureInteractInput,
       this._generateControlNet(),
       this._generateCreatureInteractNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
-      this.NEW_CREATURE_MAX_AGE
+      this.NEW_CREATURE_MAX_AGE,
     );
     this._processNewCreature(creature);
     return creature;
   }
 
   _generateSpawnPosition(x_range, y_range) {
-    const generateNewPos = () => {
-      return new P(Math.floor(x_range.generateNumber()), Math.floor(y_range.generateNumber()));
-    };
+    const generateNewPos = () => new P(Math.floor(x_range.generateNumber()), Math.floor(y_range.generateNumber()));
     let pos;
-    let checkNext = () => {
+    const checkNext = () => {
       pos = generateNewPos();
-      return this.map.cells[pos.x][pos.y].isSea;
+      const next = this.map.cells[pos.x][pos.y].is_sea;
+      return next;
     };
     while (checkNext()) {}
     return pos;
@@ -350,25 +362,25 @@ class CreaturesController {
 
   _generateCreatureAtPosition(pos) {
     this.creatures_counter++;
-    var creature = new Creature(
+    const creature = new Creature(
       this.creatures_counter,
       pos,
       this.NEW_CREATURE_SATIETY,
       this.TOXICIETY_RESISTANCE,
       Math.random(),
-      this.viewZoneGetter.bind(this),
-      this._generateCreatureInteractInput.bind(this),
+      this._generateControlNetInput.bind(this),
+      this.constructor._generateCreatureInteractInput,
       this._generateControlNet(),
       this._generateCreatureInteractNet(),
       this.NEW_CREATURE_FOOD_VARIETY,
-      this.NEW_CREATURE_MAX_AGE
+      this.NEW_CREATURE_MAX_AGE,
     );
     this._processNewCreature(creature);
     return creature;
   }
 
   _cratureWannaEat(creature) {
-    let cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+    const cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
     creature.eat(cell.update(this.last_tick_timecode, this.sim_speed));
   }
 
@@ -376,29 +388,34 @@ class CreaturesController {
     creature
       .addEventListener(
         "wanna_move",
-        function (new_position) {
+        (new_position) => {
           this._creatureWannaMove(creature, new_position);
-        }.bind(this))
+        },
+      )
       .addEventListener(
         "wanna_eat",
-        function () {
+        () => {
           this._cratureWannaEat(creature);
-        }.bind(this))
+        },
+      )
       .addEventListener(
         "wanna_split",
-        function () {
+        () => {
           this._splitCreature(creature);
-        }.bind(this))
+        },
+      )
       .addEventListener(
         "eaten",
-        function () {
+        () => {
           this.eaten_creatures++;
-        }.bind(this))
+        },
+      )
       .addEventListener(
         "interaction",
-        function () {
+        () => {
           this.interactions_per_tick++;
-        }.bind(this));
+        },
+      );
   }
 
   _creatureWannaMove(creature, new_position) {
@@ -411,74 +428,76 @@ class CreaturesController {
     else if (new_position.y < this.map.VERTICAL_AXIS_RANGE.from)
       new_position.y = this.map.VERTICAL_AXIS_RANGE.to;
 
-    let now_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
-    let new_cell = this.map.cells[new_position.x][new_position.y];
+    const now_cell = this.map.cells[creature.coordinates.x][creature.coordinates.y];
+    const new_cell = this.map.cells[new_position.x][new_position.y];
 
-    //check cell for sea
+    // check cell for sea
     if (new_cell.is_sea)
       return false;
 
-    //remove from last cell    
+    // remove from last cell
     delete now_cell.walking_creatures[creature.id];
 
-    //update coordinates
+    // update coordinates
     creature.coordinates = new_position;
 
-    //add to new one    
+    // add to new one
     new_cell.walking_creatures[creature.id] = creature;
 
-    //downgrade satiety
+    // downgrade satiety
     creature.satiety -= this.MOVE_COST;
 
-    //notify controller&visualizer
+    // notify controller&visualizer
     this.dispatchEvent(this.MOVE_CREATURE_EVENT, creature);
+
+    return true;
   }
 
   _generateCreatures(x_range, y_range, amount) {
-    var creatures = []
-    for (var i = 0; i < amount; i++)
+    const creatures = [];
+    for (let i = 0; i < amount; i++)
       creatures.push(this.generateCreature(x_range, y_range));
     return creatures;
   }
 
   _generateCreatureInteractNet() {
-    //input:
-    //+ eating_type diff
-    //+ my satiety
-    //+ its satiety
-    //output: eat/none
-    let v = this.BASE_NET_VALUE;
+    // input:
+    // + eating_type diff
+    // + my satiety
+    // + its satiety
+    // output: eat/none
+    const v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
-        //2 neurons in hidden layer
+        // 2 neurons in hidden layer
         [v, v],
         [v, v],
-        [v, v]
-      ], //input
+        [v, v],
+      ], // input
       [
-        //2 outputs & 2 hidden neurons
+        // 2 outputs & 2 hidden neurons
         [v, v],
         [v, v],
-      ], //output
+      ], // output
       new OneLayer(
-        PROCESS_FUNCTIONS.Lineral_OneLimited
+        PROCESS_FUNCTIONS.Lineral_OneLimited,
       ),
       PROCESS_FUNCTIONS.Lineral,
-      PROCESS_FUNCTIONS.Lineral_OneLimited
+      PROCESS_FUNCTIONS.Lineral_OneLimited,
     ).mutate(this.START_MUTATE_RANGE);
   }
 
   _generateControlNet() {
-    //input: 
-    //+ viewzone(9 cells -> x3(food_type + food_amount + is_sea))
-    //+ satiety + fatigue
-    //+ 4 creatures per each direction (x2 -> food_type + satiety)    
-    //output: move_up/move_right/move_down/move_left/eat/rest
-    let v = this.BASE_NET_VALUE;
+    // input:
+    // + viewzone(9 cells -> x3(food_type + food_amount + is_sea))
+    // + satiety + fatigue
+    // + 4 creatures per each direction (x2 -> food_type + satiety)
+    // output: move_up/move_right/move_down/move_left/eat/rest
+    const v = this.BASE_NET_VALUE;
     return new NeuralNetwork(
       [
-        //8 neurons in hidden layer
-        //food type
+        // 8 neurons in hidden layer
+        // food type
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -488,7 +507,7 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
-        //food amount
+        // food amount
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -498,7 +517,7 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
-        //is sea
+        // is sea
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
@@ -509,25 +528,25 @@ class CreaturesController {
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
 
-        //satiety
+        // satiety
         [v, v, v, v, v, v, v, v],
 
-        //fatigue
+        // fatigue
         [v, v, v, v, v, v, v, v],
 
-        //creatures food_type
+        // creatures food_type
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
-        //creatures satiety
+        // creatures satiety
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
         [v, v, v, v, v, v, v, v],
-      ], //input
+      ], // input
       [
-        //6 outputs & 8 hidden neurons
+        // 6 outputs & 8 hidden neurons
         [v, v, v, v, v, v],
         [v, v, v, v, v, v],
         [v, v, v, v, v, v],
@@ -536,28 +555,28 @@ class CreaturesController {
         [v, v, v, v, v, v],
         [v, v, v, v, v, v],
         [v, v, v, v, v, v],
-      ], //output
+      ], // output
       new OneLayer(
-        PROCESS_FUNCTIONS.Lineral_OneLimited
+        PROCESS_FUNCTIONS.Lineral_OneLimited,
       ),
       PROCESS_FUNCTIONS.Lineral,
-      PROCESS_FUNCTIONS.Lineral_OneLimited
+      PROCESS_FUNCTIONS.Lineral_OneLimited,
     ).mutate(this.START_MUTATE_RANGE);
   }
 
-  _generateCreatureInteractInput(who, whom) {
+  static _generateCreatureInteractInput(who, whom) {
     return [
       Math.abs(who.eating_type - whom.eating_type),
       who.satiety,
-      whom.satiety
-    ]
+      whom.satiety,
+    ];
   }
 
   _generateControlNetInput(creature) {
-    let view_zone = this.viewZoneGetter(creature.coordinates);
-    let creatures = this._generateCreaturesInput(view_zone);
+    const view_zone = this.viewZoneGetter(creature.coordinates);
+    const creatures = this.constructor._generateCreaturesInput(view_zone);
     return [
-      //food type diff
+      // food type diff
       Math.abs(creature.eating_type - view_zone.right.food_type),
       Math.abs(creature.eating_type - view_zone.bottom.food_type),
       Math.abs(creature.eating_type - view_zone.left.food_type),
@@ -568,7 +587,7 @@ class CreaturesController {
       Math.abs(creature.eating_type - view_zone.top2.food_type),
       Math.abs(creature.eating_type - view_zone.center.food_type),
 
-      //food amount
+      // food amount
       view_zone.right.food_amount,
       view_zone.bottom.food_amount,
       view_zone.left.food_amount,
@@ -579,7 +598,7 @@ class CreaturesController {
       view_zone.top2.food_amount,
       view_zone.center.food_amount,
 
-      //is sea
+      // is sea
       view_zone.right.is_sea ? 1 : 0,
       view_zone.bottom.is_sea ? 1 : 0,
       view_zone.left.is_sea ? 1 : 0,
@@ -590,19 +609,19 @@ class CreaturesController {
       view_zone.top2.is_sea ? 1 : 0,
       view_zone.center.is_sea ? 1 : 0,
 
-      //satiety
+      // satiety
       creature.satiety,
 
-      //fatigue
+      // fatigue
       creature.fatigue,
 
-      //creatures eating_type
+      // creatures eating_type
       creatures.eating_type.top,
       creatures.eating_type.right,
       creatures.eating_type.bottom,
       creatures.eating_type.left,
 
-      //creatures satieties
+      // creatures satieties
       creatures.satieties.top,
       creatures.satieties.right,
       creatures.satieties.bottom,
@@ -610,22 +629,36 @@ class CreaturesController {
     ];
   }
 
-  _generateCreaturesInput(view_zone) {
-    let c = {
+  static _generateCreaturesInput(view_zone) {
+    function findMainCreature(creatures) {
+      if (creatures.length === 0)
+        return null;
+
+      let main_creature = null;
+      const arr = Object.values(creatures);
+      for (let i = 0; i < arr.length; i++) {
+        const creature = arr[i];
+        if (main_creature === null || creature.satiety > main_creature.satiety)
+          main_creature = creature;
+      }
+      return main_creature;
+    }
+
+    const c = {
       top: findMainCreature(view_zone.top.walking_creatures),
       right: findMainCreature(view_zone.right.walking_creatures),
       bottom: findMainCreature(view_zone.bottom.walking_creatures),
       left: findMainCreature(view_zone.left.walking_creatures),
     };
 
-    let eating_type = {
+    const eating_type = {
       top: c.top === null ? -1 : c.top.eating_type,
       right: c.right === null ? -1 : c.right.eating_type,
       bottom: c.bottom === null ? -1 : c.bottom.eating_type,
       left: c.left === null ? -1 : c.left.eating_type,
     };
 
-    let satieties = {
+    const satieties = {
       top: c.top === null ? -1 : c.top.satiety,
       right: c.right === null ? -1 : c.right.satiety,
       bottom: c.bottom === null ? -1 : c.bottom.satiety,
@@ -633,22 +666,8 @@ class CreaturesController {
     };
 
     return {
-      eating_type: eating_type,
-      satieties: satieties
-    }
-
-
-    function findMainCreature(creatures) {
-      if (creatures.length == 0)
-        return null;
-
-      let main_creature = null;
-      for (let id in creatures) {
-        let creature = creatures[id];
-        if (main_creature === null || creature.satiety > main_creature.satiety)
-          main_creature = creature;
-      }
-      return main_creature;
-    }
+      eating_type,
+      satieties,
+    };
   }
 }

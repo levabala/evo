@@ -2,8 +2,8 @@ class Creature {
   constructor(
     id, coordinates, satiety, toxicity_resistance,
     eating_type, request_control_net_input, request_interact_net_input,
-    control_net, interact_net, food_variety = -0.483, max_age = 50 * 1000) {
-
+    control_net, interact_net, food_variety = -0.483, max_age = 50 * 1000,
+  ) {
     Reactor.apply(this, []);
 
     this.id = id;
@@ -25,11 +25,11 @@ class Creature {
     this.split_cooldown = 0;
     this.eated_creatures = 0;
 
-    //neural networks
+    // neural networks
     this.control_net = control_net;
     this.interact_net = interact_net;
 
-    //constants    
+    // constants
     this.REST_FATIGUE_REMOVE = 0.005;
     this.FOOD_PER_ACTION = 0.3;
     this.FATIGUE_DONWGRADE = 0.005;
@@ -40,7 +40,7 @@ class Creature {
     this.EAT_CREATURE_COST = 10;
     this.EAT_CREATURE_EFFECTIVITY = 0.2;
 
-    //events
+    // events
     this.registerEvent("eaten");
     this.registerEvent("interaction");
     this.registerEvent("wanna_eat");
@@ -56,7 +56,8 @@ class Creature {
   mutateProps(range) {
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
-    if (this.generation % 50) this.population_id = this._generationPopulationId();
+    if (this.generation % 50)
+      this.population_id = this._generationPopulationId();
     return this;
   }
 
@@ -67,11 +68,11 @@ class Creature {
   }
 
   clone() {
-    let creature = new Creature(
+    const creature = new Creature(
       this.id, this.coordinates.clone(), this.satiety,
       this.toxicity_resistance, this.eating_type, this.request_control_net_input,
       this.request_interact_net_input, this.control_net.clone(),
-      this.interact_net.clone(), this.eating_type, this.max_age
+      this.interact_net.clone(), this.eating_type, this.max_age,
     );
     creature.population_id = this.population_id;
     return creature;
@@ -82,8 +83,8 @@ class Creature {
   }
 
   actionsToDoCount(time) {
-    let fatigue_to_spend = time * this.FATIGUE_DONWGRADE - Math.max(this.fatigue, 0);
-    let actions = Math.floor(Math.max(fatigue_to_spend, 0) / this.ACTION_COST);
+    const fatigue_to_spend = time * this.FATIGUE_DONWGRADE - Math.max(this.fatigue, 0);
+    const actions = Math.floor(Math.max(fatigue_to_spend, 0) / this.ACTION_COST);
     return actions;
   }
 
@@ -113,13 +114,13 @@ class Creature {
   }
 
   _makeAction(time) {
-    let input = this.request_control_net_input(this);
-    let actions_weight = this.control_net.calc(input);
+    const input = this.request_control_net_input(this);
+    const actions_weight = this.control_net.calc(input);
 
-    //execute the most weightful action
-    let action = ACTIONS_DECIDE_MAP[
+    // execute the most weightful action
+    const action = ACTIONS_DECIDE_MAP[
       actions_weight.indexOf(
-        Math.max(...actions_weight)
+        Math.max(...actions_weight),
       )
     ];
 
@@ -142,9 +143,9 @@ class Creature {
 
     this.dispatchEvent("interaction");
 
-    let input = this.request_interact_net_input(this, creature);
-    let actions_weight = this.interact_net.calc(
-      input
+    const input = this.request_interact_net_input(this, creature);
+    const actions_weight = this.interact_net.calc(
+      input,
     );
 
     if (this.EAT_EVERYBODY) {
@@ -152,10 +153,10 @@ class Creature {
       return true;
     }
 
-    //execute the most weightful action
-    let action = ACTIONS_INTERACT_MAP[
+    // execute the most weightful action
+    const action = ACTIONS_INTERACT_MAP[
       actions_weight.indexOf(
-        Math.max(...actions_weight)
+        Math.max(...actions_weight),
       )
     ];
 
@@ -165,7 +166,7 @@ class Creature {
   }
 
   eatCreature(creature) {
-    let effect = creature.satiety * this.EAT_CREATURE_EFFECTIVITY;
+    const effect = creature.satiety * this.EAT_CREATURE_EFFECTIVITY;
     this.satiety = Math.min(this.satiety + effect, 1);
     this.fatigue += this.EAT_CREATURE_COST;
     this.eated_creatures++;
@@ -183,25 +184,25 @@ class Creature {
       return;
     }
 
-    var type_diff = Math.abs(this.eating_type - cell.food_type);
-    var amount = Math.min(cell.food_amount, this.FOOD_PER_ACTION);
-    var age_modificator = Math.pow((1 - this.age / this.max_age), 1 / 2);
+    const type_diff = Math.abs(this.eating_type - cell.food_type);
+    const amount = Math.min(cell.food_amount, this.FOOD_PER_ACTION);
+    let age_modificator = Math.pow((1 - this.age / this.max_age), 1 / 2);
     if (this.age >= this.max_age)
       age_modificator = 0;
-    //var effect = (Math.exp(type_diff) - 1) / (1.7 * this.food_variety) * amount * age_modificator * this.FOOD_MULTIPLITER;
+    // var effect = (Math.exp(type_diff) - 1) / (1.7 * this.food_variety) * amount * age_modificator * this.FOOD_MULTIPLITER;
     let type_diff_coeff = 1;
-    if (type_diff < 0.5) {
+    if (type_diff < 0.5)
       type_diff_coeff = Math.pow(1 - type_diff, 1 / (2 * this.food_variety + 1));
-    } else {
+    else
       type_diff_coeff = -Math.pow(type_diff, 1 / (2 * this.food_variety + 1));
-    }
-    //console.log(Math.round(type_diff_coeff * 100) / 100, Math.round(amount * 100) / 100, Math.round(age_modificator * 100) / 100)
-    var effect =
+
+    // console.log(Math.round(type_diff_coeff * 100) / 100, Math.round(amount * 100) / 100, Math.round(age_modificator * 100) / 100)
+    let effect =
       type_diff_coeff *
       amount *
-      age_modificator
+      age_modificator;
     effect = Math.min(this.satiety, effect);
-    //console.log(`food lost: ${amount - effect}`);
+    // console.log(`food lost: ${amount - effect}`);
 
     this.satiety_gained += effect / ((age_modificator == 0) ? 1 : age_modificator);
     this.satiety = Math.min(this.satiety + effect, 1);
@@ -210,7 +211,7 @@ class Creature {
   }
 
   move(delta_x, delta_y) {
-    let new_position = this.nextPosition(delta_x, delta_y);
+    const new_position = this.nextPosition(delta_x, delta_y);
     this.dispatchEvent("wanna_move", new_position);
     this._register_update();
   }
@@ -220,7 +221,7 @@ class Creature {
   }
 
   say(string) {
-    console.log("#" + this.id + ":", string);
+    console.log(`#${this.id}:`, string);
   }
 
   generateJsonObjectConstructor() {
@@ -231,19 +232,19 @@ class Creature {
       eating_type: this.eating_type,
       generation: this.generation,
       control_net: this.control_net.toJsonObject(),
-      interact_net: this.interact_net.toJsonObject()
-    }
+      interact_net: this.interact_net.toJsonObject(),
+    };
   }
 }
 
 Creature.fromJsonObject = function (
   obj, id, coordinates, satiety, toxicity_resistance,
-  food_variety, max_age, request_control_net_input, request_interact_net_input
+  food_variety, max_age, request_control_net_input, request_interact_net_input,
 ) {
-  let creature = new Creature(
+  const creature = new Creature(
     id, coordinates, satiety, toxicity_resistance, obj.eating_type,
     request_control_net_input, request_interact_net_input, NeuralNetwork.fromJsonObject(obj.control_net),
-    NeuralNetwork.fromJsonObject(obj.interact_net), food_variety, max_age
+    NeuralNetwork.fromJsonObject(obj.interact_net), food_variety, max_age,
   );
   return creature;
 };
