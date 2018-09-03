@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 class VisualizerSVG {
   constructor(div, map_contoller, creatures_controller) {
     Reactor.apply(this, []);
@@ -9,14 +11,14 @@ class VisualizerSVG {
     this.map_contoller = map_contoller;
     this.creatures_controller =
       creatures_controller
-        .addEventListener(
-          creatures_controller.NEW_CREATURE_EVENT,
-          this._addCreature.bind(this),
-        )
-        .addEventListener(
-          creatures_controller.DEAD_CREATURE_EVENT,
-          this._removeCreature.bind(this),
-        );
+      .addEventListener(
+        creatures_controller.NEW_CREATURE_EVENT,
+        this._addCreature.bind(this),
+      )
+      .addEventListener(
+        creatures_controller.DEAD_CREATURE_EVENT,
+        this._removeCreature.bind(this),
+      );
     this.map = map_contoller.map;
     this.creatures_drawings = {}; // id - drawing
     this.cells_drawings = [];
@@ -129,8 +131,8 @@ class VisualizerSVG {
         const color = this._generateCellColor(cell);
         cells[x][y] =
           this.main_group.rect(1, 1)
-            .move(x, y)
-            .fill(color);
+          .move(x, y)
+          .fill(color);
         cells[x][y].food_amount = cell.food_amount;
       }
     }
@@ -162,9 +164,9 @@ class VisualizerSVG {
     const size = this._getCreatureSize(creature);
     this.creatures_drawings[creature.id] =
       this.main_group.rect(size, size)
-        .cx(creature.coordinates.x + 0.5)
-        .cy(creature.coordinates.y + 0.5)
-        .fill(this._generateCreatureColor(creature));
+      .cx(creature.coordinates.x + 0.5)
+      .cy(creature.coordinates.y + 0.5)
+      .fill(this._generateCreatureColor(creature));
   }
 
   _removeCreature(creature) {
@@ -285,7 +287,7 @@ class VisualizerSVG {
         const old_food_amount = drawing.food_amount;
         const new_food_amount = cell.food_amount;
         if (!drawing.removed && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1) {
-        // skips++;
+          // skips++;
           continue;
         }
         if (drawing.removed) {

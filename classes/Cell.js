@@ -40,10 +40,7 @@ class Cell {
 
     if (delta > 0)
       this._do_all_stuff(delta);
-    if (delta < 0) {
-      const dd = (timecode - this.last_update_timecode) * sim_speed;
-      const a = dd * 23;
-    }
+    if (delta < 0) {}
 
     return this;
   }

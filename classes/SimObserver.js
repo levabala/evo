@@ -36,8 +36,9 @@ class SimObserver {
   }
 
   connectInfoBox(info_box) {
-    for (const entrie of Object.entries(this.info))
-      info_box.addInfo(entrie[0], entrie[1]);
+    const entries = Object.entries(this.info);
+    for (let i = 0; i < entries.length; i++)
+      info_box.addInfo(entries[i][0], entries[i][1]);
     return this;
   }
 

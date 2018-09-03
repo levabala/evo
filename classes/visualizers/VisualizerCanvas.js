@@ -7,16 +7,15 @@ class VisualizerCanvas {
     this.width = this.jq_div.width();
     this.height = this.jq_div.height();
     this.map_contoller = map_contoller;
-    this.creatures_controller =
-      creatures_controller
-        .addEventListener(
-          creatures_controller.NEW_CREATURE_EVENT,
-          this._addCreature.bind(this),
-        )
-        .addEventListener(
-          creatures_controller.DEAD_CREATURE_EVENT,
-          this._removeCreature.bind(this),
-        );
+    this.creatures_controller = creatures_controller
+      .addEventListener(
+        creatures_controller.NEW_CREATURE_EVENT,
+        this._addCreature.bind(this),
+      )
+      .addEventListener(
+        creatures_controller.DEAD_CREATURE_EVENT,
+        this._removeCreature.bind(this),
+      );
     this.map = map_contoller.map;
     this.creatures_drawed = {};
 
@@ -38,7 +37,8 @@ class VisualizerCanvas {
     this.contextes = [this.context_background, this.context_net, this.context_cells, this.context_creatures];
 
     let z_index = 0;
-    for (const canvas of this.canvases) {
+    for (let i = 0; i < this.canvases.length; i++) {
+      const canvas = this.canvases[i];
       canvas.setAttribute("style", `position: absolute; z-index: ${z_index++}`);
       canvas.setAttribute("width", this.width);
       canvas.setAttribute("height", this.height);
@@ -85,8 +85,8 @@ class VisualizerCanvas {
   }
 
   updateTranfsorm() {
-    for (const context of this.contextes)
-      this._applyMatrix(context);
+    for (let i = 0; i < this.contextes.length; i++)
+      this._applyMatrix(this.contextes[i]);
   }
 
   _autoAdjust() {
@@ -107,7 +107,8 @@ class VisualizerCanvas {
     };
 
     // canvas adjusting
-    for (const canvas of this.canvases) {
+    for (let i = 0; i < this.canvases.length; i++) {
+      const canvas = this.canvases[i];
       canvas.setAttribute("width", this.width);
       canvas.setAttribute("height", this.height);
     }
@@ -119,7 +120,7 @@ class VisualizerCanvas {
   }
 
   _addCreature(creature) {
-
+    return this;
   }
 
   _removeCreature(creature) {
@@ -132,8 +133,8 @@ class VisualizerCanvas {
   }
 
   clearAll() {
-    for (const context of this.contextes)
-      context.clearRect(-1, -1, this.width + 1, this.height + 1);
+    for (let i = 0; i < this.contextes.length; i++)
+      this.contextes[i].clearRect(-1, -1, this.width + 1, this.height + 1);
   }
 
   renderAll(forced = false) {
@@ -194,16 +195,18 @@ class VisualizerCanvas {
         const cell = this.map.cells[x][y];
         const old_food_amount = cell._last_drawed_food_amount;
         const new_food_amount = cell.food_amount;
-        if ((cell._last_drawed_type == cell.is_sea) && !forced && !(new_food_amount != old_food_amount && new_food_amount == cell.MAX_FOOD_AMOUNT) && Math.abs(old_food_amount - new_food_amount) < 0.1)
-          continue;
-
-        // let color = `hsl(210, 100%, ${new_food_amount * 100}%)`; //this._generateCellColor(cell);
-        const color = this._generateCellColor(cell);
-        ctx.fillStyle = color;
-        // ctx.clearRect(x, y, 1, 1);
-        ctx.fillRect(x, y, 1, 1);
-        cell._last_drawed_food_amount = new_food_amount;
-        cell._last_drawed_type = cell.is_sea;
+        if (!((cell._last_drawed_type === cell.is_sea) &&
+            !forced &&
+            !(new_food_amount !== old_food_amount && new_food_amount === cell.MAX_FOOD_AMOUNT) &&
+            Math.abs(old_food_amount - new_food_amount) < 0.1)) {
+          // const color = `hsl(210, 100%, ${new_food_amount * 100}%)`; // this._generateCellColor(cell);
+          const color = this._generateCellColor(cell);
+          ctx.fillStyle = color;
+          // ctx.clearRect(x, y, 1, 1);
+          ctx.fillRect(x, y, 1, 1);
+          cell._last_drawed_food_amount = new_food_amount;
+          cell._last_drawed_type = cell.is_sea;
+        }
       }
     }
     ctx.restore();
@@ -216,9 +219,11 @@ class VisualizerCanvas {
     let skipped = 0;
     let skipped_position = 0;
     let drawed_creatures = 0;
-    for (const creature of Object.values(this.creatures_controller.creatures)) {
-      const x = creature.coordinates.x;
-      const y = creature.coordinates.y;
+    const creatures = Object.values(this.creatures_controller.creatures);
+    /* eslint-disable no-continue */
+    for (let i = 0; i < creatures.length; i++) {
+      const creature = creatures[i];
+      const [x, y] = [creature.coordinates.x, creature.coordinates.y];
       const pre_processed = creature.id in this.creatures_drawed;
       const drawed = this.creatures_drawed[creature.id];
       if (!pre_processed && (!this._x_draw_range.isIn(x, true) || !this._y_draw_range.isIn(y, true)))
@@ -238,9 +243,9 @@ class VisualizerCanvas {
       const trigger_size = 0.1;
       if (!forced && pre_processed &&
 
-          Math.abs(drawed.x - x) < trigger_move &&
-          Math.abs(drawed.y - y) < trigger_move &&
-          Math.abs(drawed.size - size) < trigger_size
+        Math.abs(drawed.x - x) < trigger_move &&
+        Math.abs(drawed.y - y) < trigger_move &&
+        Math.abs(drawed.size - size) < trigger_size
       ) {
         skipped++;
         continue;
@@ -259,16 +264,17 @@ class VisualizerCanvas {
       ctx.fillRect(x + 0.5 - size / 2, y + 0.5 - size / 2, size, size);
 
       drawed_creatures++;
-      // console.log(x,y,size,color)
     }
-    // console.log(skipped, skipped_position)
+    /* eslint-enable no-continue */
     ctx.restore();
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _getCreatureSize(creature) {
     return Math.max(creature.satiety, 0.2) * 0.7;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _generateCellColor(cell) {
     if (cell.is_sea)
       return "#4d94ff";
@@ -286,6 +292,7 @@ class VisualizerCanvas {
     return color;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _generateCreatureColor(creature) {
     const hue = Math.round(30 + creature.eating_type * 330);
     // let hue = Math.round(creature.eating_type * 360);
@@ -300,9 +307,8 @@ class VisualizerCanvas {
       width: this.width,
       height: this.height,
     };
-    const el_matrix = new SVG.Matrix();
-    for (const i in this.matrix)
-      el_matrix[i] = this.matrix[i];
+    const el_matrix = new SVG.Matrix(this.matrix);
+
     const zero_point = new SVG.Point(0, 0).transform(el_matrix.inverse());
     const max_point = new SVG.Point(size.width, size.height).transform(el_matrix.inverse());
     this._view_box.x1 = Math.ceil(zero_point.x);
@@ -322,13 +328,15 @@ class VisualizerCanvas {
   _addKeybindings() {
     window.addEventListener("keyup", (e) => {
       switch (e.code) {
-      case "KeyR":
-        this._autoAdjust();
-        this.clearAll();
-        this._updateViewBox();
-        this.updateTranfsorm();
-        this.renderAll(true);
-        break;
+        case "KeyR":
+          this._autoAdjust();
+          this.clearAll();
+          this._updateViewBox();
+          this.updateTranfsorm();
+          this.renderAll(true);
+          break;
+        default:
+          break;
       }
     });
   }
@@ -350,17 +358,15 @@ class VisualizerCanvas {
 
       const evt = window.event || e;
       const scroll = evt.detail ? evt.detail * scrollSensitivity : (evt.wheelDelta / 120) * scrollSensitivity;
-      const matrix = new SVG.Matrix();
-      for (const i in this.matrix)
-        matrix[i] = this.matrix[i];
+      const matrix = new SVG.Matrix(this.matrix);
+
       const pointer = new SVG.Point(x, y).transform(matrix.inverse());
       const old_scale = this.matrix.a;
       const new_scale = old_scale * (1 + scroll);
       const coeff = new_scale / old_scale;
       const new_matrix = matrix.scale(coeff, pointer.x, pointer.y);
 
-      for (const i in this.matrix)
-        this.matrix[i] = new_matrix[i];
+      this.matrix = new_matrix;
 
       this.clearAll();
       this._updateViewBox();

@@ -38,11 +38,13 @@ class Range {
   }
 
   isIn(value, include = false) {
-    if (
+    /* if (
       include && (this.from > value || this.to < value) ||
       !include && (this.from >= value || this.to <= value))
       return false;
-    return true;
+    return true; */
+    return !(include && !(this.from <= value && this.to >= value)) &&
+      !(!include && !(this.from < value && this.to > value));
   }
 
   generateNumber() {

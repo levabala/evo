@@ -11,15 +11,18 @@ class SimMap {
     this.last_sea_rate_seed = 0;
     this.last_sea_level_seed = 0;
     this.last_food_type_seed = 0;
+    this.last_fertility_seed = 0;
     this.last_sea_rate_height = 0;
     this.last_sea_level_height = 0;
     this.last_food_type_height = 0;
+    this.last_fertility_height = 0;
     this.change_sea_timeout = 0;
     this.sea_cells_count = 0;
 
     // sea props
     this.change_sea_rate = 16;
     this.changing_sea = 128;
+    this.changing_fertility = 64;
 
     // constants
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
@@ -65,6 +68,10 @@ class SimMap {
     const sea_level_height = 0;
     const sea_map = this._createPerlinMap(this.changing_sea, sea_level_seed, sea_level_height);
 
+    const fertility_seed = Math.random();
+    const fertility_height = 0;
+    const fertility_map = this._createPerlinMap(this.changing_fertility, fertility_seed, fertility_height);
+
     const changing_food = 64;
     const food_type_seed = Math.random();
     const food_type_height = 0;
@@ -78,7 +85,7 @@ class SimMap {
           this.sea_cells_count++;
         map[x][y] = new Cell(
           new P(x, y),
-          this.fertility_base + (Math.random() - 1) * 2 * this.fertility_range,
+          this.fertility_base + fertility_map[x][y] * 2 * this.fertility_range,
           food_map[x][y],
           is_sea,
           sea_map[x][y],
@@ -90,9 +97,12 @@ class SimMap {
     this.last_sea_rate_seed = sea_rate_seed;
     this.last_sea_level_seed = sea_level_seed;
     this.last_food_type_seed = food_type_seed;
+    this.last_fertility_seed = fertility_seed;
+
     this.last_sea_rate_height = sea_rate_height;
     this.last_sea_level_height = sea_level_height;
     this.last_food_type_height = food_type_height;
+    this.last_fertility_height = fertility_height;
 
     return map;
   }

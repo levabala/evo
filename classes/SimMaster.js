@@ -72,13 +72,15 @@ class SimMaster {
 
   startSimulation() {
     this.lastTimecode = Date.now(); // - 30000 / this._sim_speed;
-    this.creatures_controller.last_tick_timecode = this.creatures_controller.last_update_timecode = this.lastTimecode;
+    this.creatures_controller.last_tick_timecode = this.lastTimecode;
+    this.creatures_controller.last_update_timecode = this.lastTimecode;
     this.simulationTick();
     this.launch_time = Date.now();
   }
 
   continueSimulation() {
-    this.lastTimecode = this.creatures_controller.last_tick_timecode = Date.now();
+    this.lastTimecode = Date.now();
+    this.creatures_controller.last_tick_timecode = this.lastTimecode;
     this.paused = false;
 
     for (let x = 0; x < this.map_controller.map.width; x++) {
@@ -134,7 +136,7 @@ class SimMaster {
     this.dispatchEvent("tick_end");
     this.ticks_counter++;
 
-    if (this.debug && this.ticks_counter % 500 == 0)
+    if (this.debug && this.ticks_counter % 500 === 0)
       console.clear();
 
     const nextTickDelay = Math.max(this._tick_interval - (Date.now() - nowTime), 10);
@@ -148,7 +150,7 @@ class SimMaster {
     else
     if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
       const a = this.last_ticks_duration_average > 0 ? (1 / this.last_ticks_duration_average / 70 * 100) : 0;
-      this.silentSimSpeed(Math.min(this._sim_speed + Math.pow(a, 1.2) * 40, this.targered_sim_speed));
+      this.silentSimSpeed(Math.min(this._sim_speed + (a ** 1.2) * 40, this.targered_sim_speed));
     }
 
     this.last_ticks_duration.push(this.last_tick_duration);
@@ -157,8 +159,8 @@ class SimMaster {
 
 
     this.last_ticks_duration_average = 0;
-    for (const duration of this.last_ticks_duration)
-      this.last_ticks_duration_average += duration;
+    for (let i = 0; i < this.last_ticks_duration.length; i++)
+      this.last_ticks_duration_average += this.last_ticks_duration[i];
     this.last_ticks_duration_average /= this.last_ticks_duration.length;
   }
 }

@@ -9,6 +9,7 @@ parserOptions:
   sourceType: 'script'
   modules: 0
 rules:
+  no-console: 0
   no-debugger: 1
   no-unused-vars: 0
   strict: 0
@@ -22,7 +23,8 @@ rules:
     - 2    
     - 2    
     - ignoredNodes: 
-      - "ConditionalExpression"
+        - "ConditionalExpression"    
+      SwitchCase: 1      
   no-param-reassign:
     - 2
     - props: false

@@ -49,7 +49,7 @@ class Creature {
     this.registerEvent("action_performed");
   }
 
-  _generationPopulationId() {
+  static _generationPopulationId() {
     return Math.floor((Math.random() + 0.5) * 1000 * 1000 * 1000);
   }
 
@@ -57,7 +57,7 @@ class Creature {
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
     if (this.generation % 50)
-      this.population_id = this._generationPopulationId();
+      this.population_id = this.constructor._generationPopulationId();
     return this;
   }
 
@@ -186,15 +186,15 @@ class Creature {
 
     const type_diff = Math.abs(this.eating_type - cell.food_type);
     const amount = Math.min(cell.food_amount, this.FOOD_PER_ACTION);
-    let age_modificator = Math.pow((1 - this.age / this.max_age), 1 / 2);
+    let age_modificator = (1 - this.age / this.max_age) ** (1 / 2);
     if (this.age >= this.max_age)
       age_modificator = 0;
     // var effect = (Math.exp(type_diff) - 1) / (1.7 * this.food_variety) * amount * age_modificator * this.FOOD_MULTIPLITER;
     let type_diff_coeff = 1;
     if (type_diff < 0.5)
-      type_diff_coeff = Math.pow(1 - type_diff, 1 / (2 * this.food_variety + 1));
+      type_diff_coeff = (1 - type_diff) ** (1 / (2 * this.food_variety + 1));
     else
-      type_diff_coeff = -Math.pow(type_diff, 1 / (2 * this.food_variety + 1));
+      type_diff_coeff = -(type_diff ** (1 / (2 * this.food_variety + 1)));
 
     // console.log(Math.round(type_diff_coeff * 100) / 100, Math.round(amount * 100) / 100, Math.round(age_modificator * 100) / 100)
     let effect =
@@ -204,7 +204,7 @@ class Creature {
     effect = Math.min(this.satiety, effect);
     // console.log(`food lost: ${amount - effect}`);
 
-    this.satiety_gained += effect / ((age_modificator == 0) ? 1 : age_modificator);
+    this.satiety_gained += effect / ((age_modificator === 0) ? 1 : age_modificator);
     this.satiety = Math.min(this.satiety + effect, 1);
     cell.food_amount -= amount;
     this._register_update();
@@ -237,7 +237,7 @@ class Creature {
   }
 }
 
-Creature.fromJsonObject = function (
+Creature.fromJsonObject = function fromJsonObject(
   obj, id, coordinates, satiety, toxicity_resistance,
   food_variety, max_age, request_control_net_input, request_interact_net_input,
 ) {
@@ -246,6 +246,7 @@ Creature.fromJsonObject = function (
     request_control_net_input, request_interact_net_input, NeuralNetwork.fromJsonObject(obj.control_net),
     NeuralNetwork.fromJsonObject(obj.interact_net), food_variety, max_age,
   );
+  creature.generation = obj.generation || 0;
   return creature;
 };
 

@@ -1,5 +1,7 @@
 const _debug = false;
 
+/* eslint func-names: 0 */
+
 const ACTION_MOVE_LEFT = function (time, creature) {
   if (_debug)
     creature.say("wanna move left");

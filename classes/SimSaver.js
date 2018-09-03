@@ -13,7 +13,7 @@ class SimSaver {
     this.check();
   }
 
-  get allSessions() {
+  static get allSessions() {
     const sessions = {};
     store.each((el, session_id) => {
       if (Object.keys(el).length > 0)
@@ -22,7 +22,7 @@ class SimSaver {
     return sessions;
   }
 
-  get allSessionsAsArrays() {
+  static get allSessionsAsArrays() {
     const sessions = {};
     store.each((el, session_id) => {
       if (Object.keys(el).length > 0)
@@ -31,7 +31,7 @@ class SimSaver {
     return sessions;
   }
 
-  get allSavedCreatures() {
+  static get allSavedCreatures() {
     let creatures = [];
     store.each((el, session_id) => {
       creatures = creatures.concat(Object.values(el));
@@ -54,7 +54,11 @@ class SimSaver {
       saved.splice(saved.indexOf(who), 1);
     };
 
-    for (const creature of Object.values(this.master.creatures_controller.creatures)) {
+    const creatures = Object.values(this.master.creatures_controller.creatures);
+    /* eslint no-continue: 0 */
+    for (let i = 0; i < creatures.length; i++) {
+      const creature = creatures[i];
+
       // check for min generation
       if (creature.generation < this.MIN_GENERATION_NEED)
         continue;
