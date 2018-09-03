@@ -165,7 +165,7 @@ class CreaturesController {
       ];
       for (let i2 = 0; i2 < near_cells.length; i2++) {
         const cell = near_cells[i2];
-        const new_creatures = Object.values(cell.walking_creatures);
+        const new_creatures = cell.walking_creatures;
         for (let i3 = 0; i3 < new_creatures.length; i3++) {
           const c = new_creatures[i3];
           if (
@@ -237,9 +237,7 @@ class CreaturesController {
         const pos = center.clone().add(delta);
         if (!pos.inRange(this.map.HORIZONTAL_AXIS_RANGE, this.map.VERTICAL_AXIS_RANGE))
           return false;
-        const cell_creatures_count = Object.keys(
-          this.map.cellAtPoint.bind(map)(pos).walking_creatures,
-        ).length;
+        const cell_creatures_count = this.map.cellAtPoint.bind(map)(pos).walking_creatures.length;
         return cell_creatures_count === 0;
       },
     );
@@ -288,14 +286,14 @@ class CreaturesController {
   }
 
   addCreature(creature) {
-    this.map.cells[creature.coordinates.x][creature.coordinates.y].walking_creatures[creature.id] = creature;
+    this.map.cells[creature.coordinates.x][creature.coordinates.y].addCreature(creature);
     this.creatures[creature.id] = creature;
     this.dispatchEvent(this.NEW_CREATURE_EVENT, creature);
   }
 
   _removeCreature(creature) {
     this.dispatchEvent(this.DEAD_CREATURE_EVENT, creature);
-    delete this.map.cells[creature.coordinates.x][creature.coordinates.y].walking_creatures[creature.id];
+    this.map.cells[creature.coordinates.x][creature.coordinates.y].removeCreature(creature.id);
     delete this.creatures[creature.id];
   }
 
@@ -436,13 +434,13 @@ class CreaturesController {
       return false;
 
     // remove from last cell
-    delete now_cell.walking_creatures[creature.id];
+    now_cell.removeCreature(creature);
 
     // update coordinates
     creature.coordinates = new_position;
 
     // add to new one
-    new_cell.walking_creatures[creature.id] = creature;
+    new_cell.addCreature(creature);
 
     // downgrade satiety
     creature.satiety -= this.MOVE_COST;
@@ -635,9 +633,8 @@ class CreaturesController {
         return null;
 
       let main_creature = null;
-      const arr = Object.values(creatures);
-      for (let i = 0; i < arr.length; i++) {
-        const creature = arr[i];
+      for (let i = 0; i < creatures.length; i++) {
+        const creature = creatures[i];
         if (main_creature === null || creature.satiety > main_creature.satiety)
           main_creature = creature;
       }

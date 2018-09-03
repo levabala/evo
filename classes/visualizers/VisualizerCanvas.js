@@ -195,10 +195,11 @@ class VisualizerCanvas {
         const cell = this.map.cells[x][y];
         const old_food_amount = cell._last_drawed_food_amount;
         const new_food_amount = cell.food_amount;
-        if (!((cell._last_drawed_type === cell.is_sea) &&
-            !forced &&
-            !(new_food_amount !== old_food_amount && new_food_amount === cell.MAX_FOOD_AMOUNT) &&
-            Math.abs(old_food_amount - new_food_amount) < 0.1)) {
+        if (
+          (Math.abs(old_food_amount - new_food_amount) > 0.1 && !cell.is_sea) ||
+          cell._last_drawed_type !== cell.is_sea ||
+          (new_food_amount !== old_food_amount && new_food_amount === cell.MAX_FOOD_AMOUNT) ||
+          forced) {
           // const color = `hsl(210, 100%, ${new_food_amount * 100}%)`; // this._generateCellColor(cell);
           const color = this._generateCellColor(cell);
           ctx.fillStyle = color;

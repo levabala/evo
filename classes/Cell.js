@@ -10,7 +10,7 @@ class Cell {
     this.fertility = fertility;
     this.detoxification_rate = detoxification_rate;
     this.toxicity = toxicity;
-    this.walking_creatures = {};
+    this.walking_creatures = [];
     this.processed_time = 0;
     this.last_update_timecode = Date.now();
     this.buffer = 0;
@@ -26,6 +26,15 @@ class Cell {
     // this.food_amount = this.MAX_FOOD_AMOUNT;
 
     this._do_all_stuff(0);
+  }
+
+  addCreature(creature) {
+    this.walking_creatures.push(creature);
+  }
+
+  removeCreature(creature) {
+    const index = this.walking_creatures.find(c => c.id === creature.id);
+    this.walking_creatures.splice(index, 1);
   }
 
   update(timecode, sim_speed) {
