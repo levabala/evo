@@ -1,4 +1,4 @@
-var NEURAL_NETS = {
-    "NeuralNetwork": NeuralNetwork,
-    "OneLayer": OneLayer
+const NEURAL_NETS = {
+  NeuralNetwork,
+  OneLayer,
 };

@@ -7,19 +7,21 @@ class NetworkLayer {
   }
 
   calc(input) {
-    var neurons = [];
-    //input processing
-    for (var i in input)
+    const neurons = [];
+    // input processing
+    for (var i in input) {
       for (var n in this.input_weigths)
         neurons[n] += input[i] * this.input_weigths[n];
+    }
     for (var n in neurons)
       neurons[n] = this.neuron_fun(neurons[n]);
 
-    //output processing
-    var output = [];
-    for (var n in this.output_weights)
+    // output processing
+    const output = [];
+    for (var n in this.output_weights) {
       for (var i in this.neurons_weights[n])
         output[n] += neurons[i] * this.neurons_weights[n][i];
+    }
 
 
     return output;

@@ -1,7 +1,6 @@
 class EvoStimulator {
   constructor(sim_master) {
-    this.sim_master =
-      sim_master
+    this.sim_master = sim_master
       .addEventListener("tick_end", this._stimulate.bind(this))
       .addEventListener("sim_speed_changed", this._changeSimSpeed.bind(this));
     this.stimulate_interval = this.sim_master.creatures_controller.NEW_CREATURE_MAX_AGE / 5;
@@ -9,7 +8,7 @@ class EvoStimulator {
     this.last_sim_time = this.sim_master.sim_time;
     this.next_stimulate_timeout = this.sim_master.lastTimecode;
 
-    //constants
+    // constants
     this.CREATURES_DENSITY_TRIGGER = 0.022;
     this.CREATURES_DENSITY_LOW_TRIGGER = 0.007;
     this.FOOD_VARIETY_ADDITION = -0.001;
@@ -18,17 +17,17 @@ class EvoStimulator {
     this.FOOD_VARIETY_MAX = -0.497;
   }
 
-  _food_variety_fun(value) {
-    return Math.pow(value + 0.5, 2) * value;
+  static _food_variety_fun(value) {
+    return ((value + 0.5) ** 2) * value;
   }
 
   _changeSimSpeed(sim_speeds) {
     this.next_stimulate_timeout = this.sim_master.lastTimecode + this.timeout * sim_speeds.last / sim_speeds.new;
-    //TODO: make it normal, please)
+    // TODO: make it normal, please)
   }
 
   _stimulate() {
-    let delta = this.next_stimulate_timeout - this.sim_master.lastTimecode;
+    const delta = this.next_stimulate_timeout - this.sim_master.lastTimecode;
     this.timeout = delta;
 
     if (delta <= 0) {
@@ -40,10 +39,10 @@ class EvoStimulator {
       } else
       if (this.sim_master.creatures_controller.creatures_density <= this.CREATURES_DENSITY_LOW_TRIGGER) {
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY -= this.FOOD_VARIETY_ADDITION;
-        let last = this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY;
+        const last = this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY;
         this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY =
           Math.min(this.FOOD_VARIETY_MIN, this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY);
-        if (this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY != this.FOOD_VARIETY_MIN)
+        if (this.sim_master.creatures_controller.NEW_CREATURE_FOOD_VARIETY !== this.FOOD_VARIETY_MIN)
           console.warn("NEED DOWN STIMULATE");
       }
       this.next_stimulate_timeout = this.sim_master.lastTimecode + this.stimulate_interval / this.sim_master.sim_speed;

@@ -4,7 +4,7 @@ class SimSaver {
     this.saved_creatures = {};
     this.saving_seed = guid();
 
-    //constants
+    // constants
     this.CHECK_INTERVAL = 1000;
     this.MAX_SAVED = 10;
     this.MIN_GENERATION_NEED = 50;
@@ -13,8 +13,8 @@ class SimSaver {
     this.check();
   }
 
-  get allSessions() {
-    let sessions = {};
+  static get allSessions() {
+    const sessions = {};
     store.each((el, session_id) => {
       if (Object.keys(el).length > 0)
         sessions[session_id] = el;
@@ -22,8 +22,8 @@ class SimSaver {
     return sessions;
   }
 
-  get allSessionsAsArrays() {
-    let sessions = {};
+  static get allSessionsAsArrays() {
+    const sessions = {};
     store.each((el, session_id) => {
       if (Object.keys(el).length > 0)
         sessions[session_id] = Object.values(el);
@@ -31,7 +31,7 @@ class SimSaver {
     return sessions;
   }
 
-  get allSavedCreatures() {
+  static get allSavedCreatures() {
     let creatures = [];
     store.each((el, session_id) => {
       creatures = creatures.concat(Object.values(el));
@@ -39,14 +39,14 @@ class SimSaver {
     creatures = creatures.sort((a, b) => {
       if (a.generation > b.generation)
         return -1;
-      else return 1;
+      return 1;
     });
     return creatures;
   }
 
   check() {
-    let saved = Object.values(this.saved_creatures);
-    let replace = (who, whom, obj) => {
+    const saved = Object.values(this.saved_creatures);
+    const replace = (who, whom, obj) => {
       this.saved_creatures[whom.id] = obj;
       saved.push(whom);
 
@@ -54,35 +54,37 @@ class SimSaver {
       saved.splice(saved.indexOf(who), 1);
     };
 
-    for (let creature of Object.values(this.master.creatures_controller.creatures)) {
-      //check for min generation
+    const creatures = Object.values(this.master.creatures_controller.creatures);
+    /* eslint no-continue: 0 */
+    for (let i = 0; i < creatures.length; i++) {
+      const creature = creatures[i];
+
+      // check for min generation
       if (creature.generation < this.MIN_GENERATION_NEED)
         continue;
 
-      //generate potential replaced
-      let obj = creature.generateJsonObjectConstructor();
-      let less_generation = saved.filter(
-        (saved_c) =>
-          creature.generation > saved_c.generation
+      // generate potential replaced
+      const obj = creature.generateJsonObjectConstructor();
+      const less_generation = saved.filter(
+        saved_c => creature.generation > saved_c.generation,
       );
       if (less_generation.length > 0) {
-        //check for replace similiar
-        let similiar = less_generation.filter(
-          (saved_c) =>
-            Math.abs(creature.population_id - saved_c.population_id) < this.MIN_POPULATION_ID_DIFF
+        // check for replace similiar
+        const similiar = less_generation.filter(
+          saved_c => Math.abs(creature.population_id - saved_c.population_id) < this.MIN_POPULATION_ID_DIFF,
         );
         if (similiar.length > 0) {
-          let to_replace = similiar.sort((a, b) => b.generation > a.generation ? 1 : -1)[0];
+          const to_replace = similiar.sort((a, b) => (b.generation > a.generation ? 1 : -1))[0];
           replace(to_replace, creature, obj);
           continue;
         }
 
-        //replace lowest unsimiliar
-        let lowest = less_generation.sort((a, b) => b.generation > a.generation ? 1 : -1)[0];
+        // replace lowest unsimiliar
+        const lowest = less_generation.sort((a, b) => (b.generation > a.generation ? 1 : -1))[0];
         replace(lowest, creature, obj);
       }
 
-      //check for just add
+      // check for just add
       if (saved.length < this.MAX_SAVED) {
         this.saved_creatures[creature.id] = obj;
         saved.push(obj);
