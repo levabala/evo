@@ -51,7 +51,7 @@ class Info {
   }
 
   set value(value) {
-    this._value = Math.round(value * Math.pow(10, this.max_digits)) / Math.pow(10, this.max_digits);
+    this._value = Math.round(value * (10 ** this.max_digits)) / (10 ** this.max_digits);
     this.dispatchEvent("changed", this._value);
   }
 

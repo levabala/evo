@@ -19,7 +19,7 @@ class Cell {
     this.sea_rate = sea_rate;
 
     // constants
-    this.MAX_FOOD_AMOUNT = 0.5;
+    this.MAX_FOOD_AMOUNT = 0.2;
     this.AMOUNT_CHANGE_TRIGGER = this.MAX_FOOD_AMOUNT * 0.2;
     this.TIME_TRIGGER = this.AMOUNT_CHANGE_TRIGGER / this.fertility; // 0.1 = fertility * time
 

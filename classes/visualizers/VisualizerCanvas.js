@@ -200,7 +200,7 @@ class VisualizerCanvas {
           cell._last_drawed_type !== cell.is_sea ||
           (new_food_amount !== old_food_amount && new_food_amount === cell.MAX_FOOD_AMOUNT) ||
           forced) {
-          // const color = `hsl(210, 100%, ${new_food_amount * 100}%)`; // this._generateCellColor(cell);
+          // const color = `hsl(210, 100%, ${new_food_amount * (10 ** 7)}%)`; // this._generateCellColor(cell);
           const color = this._generateCellColor(cell);
           ctx.fillStyle = color;
           // ctx.clearRect(x, y, 1, 1);

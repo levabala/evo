@@ -19,9 +19,9 @@ class SimObserver {
       creatures_density: new Info("Creatures density", 0),
       max_generation: new Info("Max generation", 0),
       max_actions_count: new Info("Max actions count", 0, value => `${value}a/t`),
-      max_age: new Info("Max age", 0, value => `${value / 1000}sec`, 1),
+      max_age: new Info("Max age", 0, value => `${(value / 1000).toFixed(1)}sec`, 1),
       max_effectivity: new Info("Max effectivity", 0, value => `${value}f/sec`, 2),
-      eaten_creatures_rate: new Info("Eated creatures rate", 0, value => `${Math.round(value * 100)}%`),
+      eaten_creatures_rate: new Info("Eated creatures rate", 0, value => `${Math.round(value * 10000) / 100}%`),
       interaction_per_sec: new Info("Interactions", 0, value => `${value}i/sec`, 1),
       food_variety: new Info("Food variety", 0),
     };

@@ -1,5 +1,5 @@
 class SimMap {
-  constructor(width, height, fertility_base = 0.000005, fertility_range = 0.00000) {
+  constructor(width, height, fertility_base = 0.000002, fertility_range = 0.00000199) {
     // add reactor
     Reactor.apply(this, []);
 
@@ -21,8 +21,8 @@ class SimMap {
 
     // sea props
     this.change_sea_rate = 16;
-    this.changing_sea = 128;
-    this.changing_fertility = 64;
+    this.changing_sea = 92;
+    this.changing_fertility = 32;
 
     // constants
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
@@ -85,7 +85,7 @@ class SimMap {
           this.sea_cells_count++;
         map[x][y] = new Cell(
           new P(x, y),
-          this.fertility_base + fertility_map[x][y] * 2 * this.fertility_range,
+          this.fertility_base + (fertility_map[x][y] - 0.5) * 2 * this.fertility_range,
           food_map[x][y],
           is_sea,
           sea_map[x][y],

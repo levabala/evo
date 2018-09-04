@@ -37,7 +37,7 @@ class CreaturesController {
     this.PROCESS_CELL_EVENT = "process_cell";
     this.START_MUTATE_RANGE = new Range(-0.5, 0.5);
     this.BASE_NET_VALUE = 0;
-    this.CREATURE_SATIETY_DOWNGRADE = 0.00002;
+    this.CREATURE_SATIETY_DOWNGRADE = 0.000004;
     this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
@@ -150,6 +150,9 @@ class CreaturesController {
     for (let i = 0; i < creatures.length; i++) {
       const creature = creatures[i];
 
+      // perform other actions
+      creature.downgradeFatigue(time);
+
       // interact other one
       const pos = creature.coordinates;
       const near_cells = [
@@ -169,8 +172,8 @@ class CreaturesController {
         for (let i3 = 0; i3 < new_creatures.length; i3++) {
           const c = new_creatures[i3];
           if (
-            c.id !== creature.id &&
             c.satiety >= creature.satiety &&
+            c.id !== creature.id &&
             !creature.interact(c)
           )
             break;
@@ -181,7 +184,7 @@ class CreaturesController {
       creature.tick(time);
 
       // downgrade
-      creature.satiety -= change;
+      creature.downgradeSatiety(change);
       if (creature.satiety <= this.MINIMAL_SATIETY_ALIVE)
         this._removeCreature(creature);
 
@@ -406,6 +409,7 @@ class CreaturesController {
         "eaten",
         () => {
           this.eaten_creatures++;
+          this._removeCreature(creature);
         },
       )
       .addEventListener(

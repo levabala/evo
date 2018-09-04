@@ -52,6 +52,7 @@ class Range {
   }
 }
 
+// INCORRECT - "Binary"
 Range.Binary = new Range(0, 1);
 Range.MinusOneToOne = new Range(-1, 1);
 

@@ -6,8 +6,8 @@ class SimSaver {
 
     // constants
     this.CHECK_INTERVAL = 1000;
-    this.MAX_SAVED = 10;
-    this.MIN_GENERATION_NEED = 50;
+    this.MAX_SAVED = 4;
+    this.MIN_GENERATION_NEED = 150;
     this.MIN_POPULATION_ID_DIFF = 1000;
 
     this.check();

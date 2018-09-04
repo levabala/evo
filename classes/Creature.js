@@ -32,13 +32,19 @@ class Creature {
     // constants
     this.REST_FATIGUE_REMOVE = 0.005;
     this.FOOD_PER_ACTION = 0.3;
-    this.FATIGUE_DONWGRADE = 0.005;
+    this.FATIGUE_DONWGRADE_BASE = 0.005;
+    this.FATIGUE_DONWGRADE_NOW = this.FATIGUE_DONWGRADE_BASE;
+    this.FATIGUE_DONWGRADE_MIN = 0.001;
     this.SPLIT_SATIETY_NEEDED = 0.9;
     this.SPLIT_MIN_INTERVAL = 5000;
     this.FOOD_MULTIPLITER = 1;
     this.ACTION_COST = 1;
-    this.EAT_CREATURE_COST = 10;
+    this.EAT_CREATURE_COST = 2;
     this.EAT_CREATURE_EFFECTIVITY = 0.2;
+
+    // getters
+    this.getFatigueDowngrade =
+      sat => Math.max(this.FATIGUE_DONWGRADE_BASE * ((1 - sat) ** 0.8), this.FATIGUE_DONWGRADE_MIN);
 
     // events
     this.registerEvent("eaten");
@@ -56,7 +62,7 @@ class Creature {
   mutateProps(range) {
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
-    if (this.generation % 50)
+    if (this.generation % 100)
       this.population_id = this.constructor._generationPopulationId();
     return this;
   }
@@ -83,13 +89,13 @@ class Creature {
   }
 
   actionsToDoCount(time) {
-    const fatigue_to_spend = time * this.FATIGUE_DONWGRADE - Math.max(this.fatigue, 0);
+    const fatigue_to_spend = time * this.FATIGUE_DONWGRADE_NOW - Math.max(this.fatigue, 0);
     const actions = Math.floor(Math.max(fatigue_to_spend, 0) / this.ACTION_COST);
     return actions;
   }
 
   timePerAction() {
-    const time = this.ACTION_COST / this.FATIGUE_DONWGRADE;
+    const time = this.ACTION_COST / this.FATIGUE_DONWGRADE_NOW;
     return time;
   }
 
@@ -97,15 +103,20 @@ class Creature {
     this.age += time;
     this.split_cooldown -= time;
     this.effectivity = this.satiety_gained / this.age * 1000;
-    this._downGradeFatigue(time);
+    this.FATIGUE_DONWGRADE_NOW = this.getFatigueDowngrade(this.satiety);
     if (this.fatigue <= 0) {
       this._makeAction(time);
       this._checkForSplit();
     }
   }
 
-  _downGradeFatigue(time) {
-    this.fatigue = this.fatigue - this.FATIGUE_DONWGRADE * time;
+  downgradeSatiety(value) {
+    this.satiety -= value;
+    this.FATIGUE_DONWGRADE_NOW = this.getFatigueDowngrade(this.satiety);
+  }
+
+  downgradeFatigue(time) {
+    this.fatigue = this.fatigue - this.FATIGUE_DONWGRADE_NOW * time;
   }
 
   _checkForSplit() {
@@ -138,7 +149,7 @@ class Creature {
   }
 
   interact(creature) {
-    if (this.fatigue <= 0)
+    if (this.fatigue > 0)
       return false;
 
     this.dispatchEvent("interaction");
@@ -149,7 +160,7 @@ class Creature {
     );
 
     if (this.EAT_EVERYBODY) {
-      ACTION_EAT_CREATURE(this, creature);
+      ACTION_EAT_CREATURE(0, this, creature);
       return true;
     }
 
@@ -168,6 +179,7 @@ class Creature {
   eatCreature(creature) {
     const effect = creature.satiety * this.EAT_CREATURE_EFFECTIVITY;
     this.satiety = Math.min(this.satiety + effect, 1);
+    this.FATIGUE_DONWGRADE_NOW = this.getFatigueDowngrade(this.satiety);
     this.fatigue += this.EAT_CREATURE_COST;
     this.eated_creatures++;
 
@@ -206,6 +218,7 @@ class Creature {
 
     this.satiety_gained += effect / ((age_modificator === 0) ? 1 : age_modificator);
     this.satiety = Math.min(this.satiety + effect, 1);
+    this.FATIGUE_DONWGRADE_NOW = this.getFatigueDowngrade(this.satiety);
     cell.food_amount -= amount;
     this._register_update();
   }
@@ -242,11 +255,13 @@ Creature.fromJsonObject = function fromJsonObject(
   food_variety, max_age, request_control_net_input, request_interact_net_input,
 ) {
   const creature = new Creature(
-    id, coordinates, satiety, toxicity_resistance, obj.eating_type,
+    id, coordinates, satiety, toxicity_resistance, Math.random(),
     request_control_net_input, request_interact_net_input, NeuralNetwork.fromJsonObject(obj.control_net),
     NeuralNetwork.fromJsonObject(obj.interact_net), food_variety, max_age,
   );
   creature.generation = obj.generation || 0;
+  if (obj.population_id)
+    creature.population_id = obj.population_id;
   return creature;
 };
 
