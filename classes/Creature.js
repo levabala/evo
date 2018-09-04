@@ -24,6 +24,7 @@ class Creature {
     this.effectivity = 0;
     this.split_cooldown = 0;
     this.eated_creatures = 0;
+    this.children = 0;
 
     // neural networks
     this.control_net = control_net;
@@ -60,6 +61,7 @@ class Creature {
   }
 
   mutateProps(range) {
+
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
     if (this.generation % 100)
@@ -68,8 +70,8 @@ class Creature {
   }
 
   mutateNets(range) {
-    this.control_net.mutate(range);
-    this.interact_net.mutate(range);
+    this.control_net.mutateWithLimiter(range);
+    this.interact_net.mutateWithLimiter(range);
     return this;
   }
 

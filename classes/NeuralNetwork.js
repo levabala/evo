@@ -21,6 +21,10 @@ class NeuralNetwork {
 
     // constants
     this.MAX_WEIGHT = 10; // TODO: apply it
+
+    //getters
+    this.getRandomMutateModificator =
+      () => Math.random() ** 10;
   }
 
   clone() {
@@ -43,6 +47,22 @@ class NeuralNetwork {
 
     if (mutate_hidden)
       this.hidden_layer.mutate(range);
+
+    return this;
+  }
+
+  mutateWithLimiter(range, mutate_hidden = true) {
+    for (let i = 0; i < this.input_weights.length; i++) {
+      for (let i2 = 0; i2 < this.input_weights[i].length; i2++)
+        this.input_weights[i][i2] += range.generateNumber() * this.getRandomMutateModificator();
+    }
+    for (let i = 0; i < this.output_weights.length; i++) {
+      for (let i2 = 0; i2 < this.output_weights[i].length; i2++)
+        this.output_weights[i][i2] += range.generateNumber() * this.getRandomMutateModificator();
+    }
+
+    if (mutate_hidden)
+      this.hidden_layer.mutateWithLimiter(range);
 
     return this;
   }

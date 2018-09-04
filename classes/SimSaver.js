@@ -44,6 +44,8 @@ class SimSaver {
     return creatures;
   }
 
+  checkDeadCreature(creature) { }
+
   check() {
     const saved = Object.values(this.saved_creatures);
     const replace = (who, whom, obj) => {
@@ -58,43 +60,46 @@ class SimSaver {
     /* eslint no-continue: 0 */
     for (let i = 0; i < creatures.length; i++) {
       const creature = creatures[i];
-
-      // check for min generation
-      if (creature.generation < this.MIN_GENERATION_NEED)
-        continue;
-
-      // generate potential replaced
-      const obj = creature.generateJsonObjectConstructor();
-      const less_generation = saved.filter(
-        saved_c => creature.generation > saved_c.generation,
-      );
-      if (less_generation.length > 0) {
-        // check for replace similiar
-        const similiar = less_generation.filter(
-          saved_c => Math.abs(creature.population_id - saved_c.population_id) < this.MIN_POPULATION_ID_DIFF,
-        );
-        if (similiar.length > 0) {
-          const to_replace = similiar.sort((a, b) => (b.generation > a.generation ? 1 : -1))[0];
-          replace(to_replace, creature, obj);
-          continue;
-        }
-
-        // replace lowest unsimiliar
-        const lowest = less_generation.sort((a, b) => (b.generation > a.generation ? 1 : -1))[0];
-        replace(lowest, creature, obj);
-      }
-
-      // check for just add
-      if (saved.length < this.MAX_SAVED) {
-        this.saved_creatures[creature.id] = obj;
-        saved.push(obj);
-        continue;
-      }
+      this.checkCreature(creature, saved, replace);
     }
 
     store.set(`${this.saving_seed}`, this.saved_creatures);
 
     setTimeout(this.check.bind(this), this.CHECK_INTERVAL);
+  }
+
+  checkCreature(creature, saved, replace) {
+    // check for min generation
+    if (creature.generation < this.MIN_GENERATION_NEED || creature.children < 3)
+      return;
+
+    // generate potential replaced
+    const obj = creature.generateJsonObjectConstructor();
+    const less_generation = saved.filter(
+      saved_c => creature.generation > saved_c.generation,
+    );
+    if (less_generation.length > 0) {
+      // check for replace similiar
+      const similiar = less_generation.filter(
+        saved_c => Math.abs(creature.population_id - saved_c.population_id) < this.MIN_POPULATION_ID_DIFF,
+      );
+      if (similiar.length > 0) {
+        const to_replace = similiar.sort((a, b) => (b.generation > a.generation ? 1 : -1))[0];
+        replace(to_replace, creature, obj);
+        return;
+      }
+
+      // replace lowest unsimiliar
+      const lowest = less_generation.sort((a, b) => (b.generation > a.generation ? 1 : -1))[0];
+      replace(lowest, creature, obj);
+    }
+
+    // check for just add
+    if (saved.length < this.MAX_SAVED) {
+      this.saved_creatures[creature.id] = obj;
+      saved.push(obj);
+      return;
+    }
   }
 
   getCurrentStore() {

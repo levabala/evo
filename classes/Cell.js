@@ -11,6 +11,7 @@ class Cell {
     this.detoxification_rate = detoxification_rate;
     this.toxicity = toxicity;
     this.walking_creatures = [];
+    this.near_creatures = [];
     this.processed_time = 0;
     this.last_update_timecode = Date.now();
     this.buffer = 0;
@@ -26,6 +27,15 @@ class Cell {
     // this.food_amount = this.MAX_FOOD_AMOUNT;
 
     this._do_all_stuff(0);
+  }
+
+  addNearCreature(creature) {
+    this.near_creatures.push(creature);
+  }
+
+  removeNearCreature(creature) {
+    const index = this.near_creatures.find(c => c.id === creature.id);
+    this.near_creatures.splice(index, 1);
   }
 
   addCreature(creature) {
@@ -49,7 +59,7 @@ class Cell {
 
     if (delta > 0)
       this._do_all_stuff(delta);
-    if (delta < 0) {}
+    if (delta < 0) { }
 
     return this;
   }

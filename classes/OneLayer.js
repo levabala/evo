@@ -22,6 +22,10 @@ class OneLayer {
     // none here
   }
 
+  mutateWithLimiter() {
+    // none here
+  }
+
   clone() {
     return new OneLayer(this.output_fun);
   }

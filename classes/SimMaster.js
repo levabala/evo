@@ -7,6 +7,7 @@ class SimMaster {
 
     this.creatures_controller = creatures_controller;
     this.map_controller = map_controller;
+    this.map = this.map_controller.map;
     this._tick_interval = tick_interval;
     this._sim_speed = 0.1;
     this.targered_sim_speed = sim_speed;
@@ -148,10 +149,10 @@ class SimMaster {
     if (this.last_tick_duration > 150)
       this.silentSimSpeed(this._sim_speed / (this.last_tick_duration / 150));
     else
-    if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
-      const a = this.last_ticks_duration_average > 0 ? (1 / this.last_ticks_duration_average / 70 * 100) : 0;
-      this.silentSimSpeed(Math.min(this._sim_speed + (a ** 1.2) * 40, this.targered_sim_speed));
-    }
+      if (this.last_ticks_duration_average < 70 && this._sim_speed < this.targered_sim_speed) {
+        const a = this.last_ticks_duration_average > 0 ? (1 / this.last_ticks_duration_average / 70 * 100) : 0;
+        this.silentSimSpeed(Math.min(this._sim_speed + (a ** 1.2) * 40, this.targered_sim_speed));
+      }
 
     this.last_ticks_duration.push(this.last_tick_duration);
     if (this.last_ticks_duration.length > this.TICKS_BUFFER)

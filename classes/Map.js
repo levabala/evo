@@ -29,7 +29,7 @@ class SimMap {
     this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
     this.SEA_RATE_CHANGE_RATE = 0.007; // 0.003;
     this.SEA_LEVEL_CHANGE_RATE = 0.001; // 0.003;
-    this.SEA_GLOBAL_LEVEL = 0.5;
+    this.SEA_GLOBAL_LEVEL = 0.2;
     this.SEA_CHANGE_INTERVAL_SECS = 10;
 
     // events

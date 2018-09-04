@@ -56,4 +56,4 @@ setTimeout(() => {
 window.onload = () => master.startSimulation();
 
 // clear console
-setInterval(() => console.clear(), 10000);
+setInterval(() => console.clear(), 30000);

@@ -12,6 +12,7 @@ class CreaturesController {
     this.maximal_effectivity = 0;
     this.maximal_eaten_creatures = 0;
     this.maximal_actions_count = 0;
+    this.maximal_children = 0;
     this.last_tick_timecode = Date.now();
     this.sim_speed = 1;
     this.creatures_density = 0;
@@ -38,11 +39,11 @@ class CreaturesController {
     this.START_MUTATE_RANGE = new Range(-0.5, 0.5);
     this.BASE_NET_VALUE = 0;
     this.CREATURE_SATIETY_DOWNGRADE = 0.000004;
-    this.CHILD_NET_MUTATE_RANGE = new Range(-0.03, 0.03);
+    this.CHILD_NET_MUTATE_RANGE = new Range(-0.1, 0.1);
     this.CHILD_PROPS_MUTATE_RANGE = new Range(-0.05, 0.05);
     this.MINIMAL_SATIETY_ALIVE = 0.05;
     this.NEW_CREATURES_PER_SECS = 1;
-    this.NEW_CREATURE_FOOD_VARIETY = -0.47;
+    this.NEW_CREATURE_FOOD_VARIETY = -0.35;
     this.NEW_CREATURE_MAX_AGE = 200 * 1000;
     this.MOVE_COST = 0.01;
     this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL = 0.0003;
@@ -109,8 +110,8 @@ class CreaturesController {
 
     this.eaten_creatures_rate =
       this.interactions_per_tick > 0 ?
-      this.eaten_creatures / this.interactions_per_tick :
-      0;
+        this.eaten_creatures / this.interactions_per_tick :
+        0;
 
     this.eaten_creatures_per_sec_buffer.push(this.eaten_creatures_rate);
     if (this.eaten_creatures_per_sec_buffer.length > 5)
@@ -134,7 +135,7 @@ class CreaturesController {
       this._generateAndAddCreature();
       this.new_creature_buffer--;
     }
-    while (this._checkCreaturesLimit()) {}
+    while (this._checkCreaturesLimit()) { }
   }
 
   _internal_tick(time) {
@@ -142,6 +143,7 @@ class CreaturesController {
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
     this.maximal_eaten_creatures = 0;
+    this.maximal_children = 0;
 
     // all creatures tick
     const change = this.CREATURE_SATIETY_DOWNGRADE * time;
@@ -155,29 +157,15 @@ class CreaturesController {
 
       // interact other one
       const pos = creature.coordinates;
-      const near_cells = [
-        this.map.cells[pos.x][pos.y],
-        this.map.cellAtCoordinates(pos.x - 1, pos.y),
-        this.map.cellAtCoordinates(pos.x - 1, pos.y - 1),
-        this.map.cellAtCoordinates(pos.x, pos.y - 1),
-        this.map.cellAtCoordinates(pos.x + 1, pos.y),
-        this.map.cellAtCoordinates(pos.x + 1, pos.y + 1),
-        this.map.cellAtCoordinates(pos.x, pos.y + 1),
-        this.map.cellAtCoordinates(pos.x - 1, pos.y + 1),
-        this.map.cellAtCoordinates(pos.x + 1, pos.y - 1),
-      ];
-      for (let i2 = 0; i2 < near_cells.length; i2++) {
-        const cell = near_cells[i2];
-        const new_creatures = cell.walking_creatures;
-        for (let i3 = 0; i3 < new_creatures.length; i3++) {
-          const c = new_creatures[i3];
-          if (
-            c.satiety >= creature.satiety &&
-            c.id !== creature.id &&
-            !creature.interact(c)
-          )
-            break;
-        }
+      const near_creatures = this.map.cells[pos.x][pos.y].near_creatures;
+      for (let i2 = 0; i2 < near_creatures.length; i2++) {
+        const c = near_creatures[i2];
+        if (
+          c.satiety >= creature.satiety &&
+          c.id !== creature.id &&
+          !creature.interact(c)
+        )
+          break;
       }
 
       // perform other actions
@@ -197,6 +185,8 @@ class CreaturesController {
         Math.max(this.maximal_effectivity, creature.effectivity);
       this.maximal_eaten_creatures =
         Math.max(this.maximal_eaten_creatures, creature.eaten_creatures);
+      this.maximal_children =
+        Math.max(this.maximal_children, creature.children);
 
       count++;
     }
@@ -269,6 +259,7 @@ class CreaturesController {
     this.addCreature(new_creature);
 
     creature.satiety -= this.SPLIT_COST;
+    creature.children++;
   }
 
   _checkCreaturesLimit() {
@@ -357,7 +348,7 @@ class CreaturesController {
       const next = this.map.cells[pos.x][pos.y].is_sea;
       return next;
     };
-    while (checkNext()) {}
+    while (checkNext()) { }
     return pos;
   }
 
@@ -392,32 +383,32 @@ class CreaturesController {
         (new_position) => {
           this._creatureWannaMove(creature, new_position);
         },
-      )
+    )
       .addEventListener(
         "wanna_eat",
         () => {
           this._cratureWannaEat(creature);
         },
-      )
+    )
       .addEventListener(
         "wanna_split",
         () => {
           this._splitCreature(creature);
         },
-      )
+    )
       .addEventListener(
         "eaten",
         () => {
           this.eaten_creatures++;
           this._removeCreature(creature);
         },
-      )
+    )
       .addEventListener(
         "interaction",
         () => {
           this.interactions_per_tick++;
         },
-      );
+    );
   }
 
   _creatureWannaMove(creature, new_position) {
@@ -440,11 +431,40 @@ class CreaturesController {
     // remove from last cell
     now_cell.removeCreature(creature);
 
+    // remove from near cells
+    const p = creature.coordinates;
+    const near_cells_last = [
+      this.map.cellAtCoordinates(p.x - 1, p.y),
+      this.map.cellAtCoordinates(p.x - 1, p.y - 1),
+      this.map.cellAtCoordinates(p.x, p.y - 1),
+      this.map.cellAtCoordinates(p.x + 1, p.y),
+      this.map.cellAtCoordinates(p.x + 1, p.y + 1),
+      this.map.cellAtCoordinates(p.x, p.y + 1),
+      this.map.cellAtCoordinates(p.x - 1, p.y + 1),
+      this.map.cellAtCoordinates(p.x + 1, p.y - 1),
+    ];
+    for (let i = 0; i < near_cells_last.length; i++)
+      near_cells_last[i].removeNearCreature(creature);
+
     // update coordinates
     creature.coordinates = new_position;
 
     // add to new one
     new_cell.addCreature(creature);
+
+    //add to new near cells
+    const near_cells_now = [
+      this.map.cellAtCoordinates(new_position.x - 1, new_position.y),
+      this.map.cellAtCoordinates(new_position.x - 1, new_position.y - 1),
+      this.map.cellAtCoordinates(new_position.x, new_position.y - 1),
+      this.map.cellAtCoordinates(new_position.x + 1, new_position.y),
+      this.map.cellAtCoordinates(new_position.x + 1, new_position.y + 1),
+      this.map.cellAtCoordinates(new_position.x, new_position.y + 1),
+      this.map.cellAtCoordinates(new_position.x - 1, new_position.y + 1),
+      this.map.cellAtCoordinates(new_position.x + 1, new_position.y - 1),
+    ];
+    for (let i = 0; i < near_cells_now.length; i++)
+      near_cells_now[i].addNearCreature(creature);
 
     // downgrade satiety
     creature.satiety -= this.MOVE_COST;
