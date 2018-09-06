@@ -13,11 +13,11 @@ class EvoStimulator {
     this.CREATURES_DENSITY_LOW_TRIGGER = 0.01;
     this.FOOD_VARIETY_ADDITION = -0.001;
     this.FOOD_VARIETY_ADDITION_COEFF = 1.01;
-    this.FOOD_VARIETY_MIN = -0.30;
+    this.FOOD_VARIETY_MIN = -0.45;
     this.FOOD_VARIETY_MAX = -0.497;
     this.SEA_LEVEL_MIN = 0.1;
     this.SEA_LEVEL_MAX = 0.6;
-    this.SEA_LEVEL_ADDITION = 0.001;
+    this.SEA_LEVEL_ADDITION = 0.000;
   }
 
   static _food_variety_fun(value) {

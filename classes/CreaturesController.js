@@ -110,8 +110,8 @@ class CreaturesController {
 
     this.eaten_creatures_rate =
       this.interactions_per_tick > 0 ?
-        this.eaten_creatures / this.interactions_per_tick :
-        0;
+      this.eaten_creatures / this.interactions_per_tick :
+      0;
 
     this.eaten_creatures_per_sec_buffer.push(this.eaten_creatures_rate);
     if (this.eaten_creatures_per_sec_buffer.length > 5)
@@ -135,7 +135,7 @@ class CreaturesController {
       this._generateAndAddCreature();
       this.new_creature_buffer--;
     }
-    while (this._checkCreaturesLimit()) { }
+    while (this._checkCreaturesLimit()) {}
   }
 
   _internal_tick(time) {
@@ -157,7 +157,9 @@ class CreaturesController {
 
       // interact other one
       const pos = creature.coordinates;
-      const near_creatures = this.map.cells[pos.x][pos.y].near_creatures;
+      const {
+        near_creatures,
+      } = this.map.cells[pos.x][pos.y];
       for (let i2 = 0; i2 < near_creatures.length; i2++) {
         const c = near_creatures[i2];
         if (
@@ -348,7 +350,7 @@ class CreaturesController {
       const next = this.map.cells[pos.x][pos.y].is_sea;
       return next;
     };
-    while (checkNext()) { }
+    while (checkNext()) {}
     return pos;
   }
 
@@ -383,32 +385,32 @@ class CreaturesController {
         (new_position) => {
           this._creatureWannaMove(creature, new_position);
         },
-    )
+      )
       .addEventListener(
         "wanna_eat",
         () => {
           this._cratureWannaEat(creature);
         },
-    )
+      )
       .addEventListener(
         "wanna_split",
         () => {
           this._splitCreature(creature);
         },
-    )
+      )
       .addEventListener(
         "eaten",
         () => {
           this.eaten_creatures++;
           this._removeCreature(creature);
         },
-    )
+      )
       .addEventListener(
         "interaction",
         () => {
           this.interactions_per_tick++;
         },
-    );
+      );
   }
 
   _creatureWannaMove(creature, new_position) {
@@ -452,7 +454,7 @@ class CreaturesController {
     // add to new one
     new_cell.addCreature(creature);
 
-    //add to new near cells
+    // add to new near cells
     const near_cells_now = [
       this.map.cellAtCoordinates(new_position.x - 1, new_position.y),
       this.map.cellAtCoordinates(new_position.x - 1, new_position.y - 1),

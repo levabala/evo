@@ -59,7 +59,6 @@ class Cell {
 
     if (delta > 0)
       this._do_all_stuff(delta);
-    if (delta < 0) { }
 
     return this;
   }

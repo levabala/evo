@@ -4,7 +4,7 @@ class InfoBox {
     this.data = {}; // name - element
   }
 
-  _createInfoEl(name) {
+  static _createInfoEl(name) {
     const div = document.createElement("div");
     const title = document.createElement("b");
     title.innerHTML = `${name}: `;
@@ -12,12 +12,14 @@ class InfoBox {
     value_span.setAttribute("style", "display: inline-block; float: right; margin-left: 5px");
     div.appendChild(title);
     div.appendChild(value_span);
-    div.setValue = new_value => value_span.innerHTML = new_value;
+    div.setValue = function setDivValue(new_value) {
+      this.children[1].innerHTML = new_value;
+    };
     return div;
   }
 
   addInfo(id, info) {
-    const el = this._createInfoEl(info.name);
+    const el = InfoBox._createInfoEl(info.name);
     el.setValue(info.value);
     this.data[id] = el;
     this.div.appendChild(el);

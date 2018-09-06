@@ -22,14 +22,14 @@ class SimMap {
     // sea props
     this.change_sea_rate = 16;
     this.changing_sea = 92;
-    this.changing_fertility = 32;
+    this.changing_fertility = 128;
 
     // constants
     this.HORIZONTAL_AXIS_RANGE = new Range(0, this.width - 1);
     this.VERTICAL_AXIS_RANGE = new Range(0, this.height - 1);
     this.SEA_RATE_CHANGE_RATE = 0.007; // 0.003;
     this.SEA_LEVEL_CHANGE_RATE = 0.001; // 0.003;
-    this.SEA_GLOBAL_LEVEL = 0.2;
+    this.SEA_GLOBAL_LEVEL = 0.4;
     this.SEA_CHANGE_INTERVAL_SECS = 10;
 
     // events

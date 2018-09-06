@@ -44,8 +44,6 @@ class SimSaver {
     return creatures;
   }
 
-  checkDeadCreature(creature) { }
-
   check() {
     const saved = Object.values(this.saved_creatures);
     const replace = (who, whom, obj) => {
@@ -98,7 +96,6 @@ class SimSaver {
     if (saved.length < this.MAX_SAVED) {
       this.saved_creatures[creature.id] = obj;
       saved.push(obj);
-      return;
     }
   }
 

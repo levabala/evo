@@ -61,7 +61,6 @@ class Creature {
   }
 
   mutateProps(range) {
-
     this.toxicity_resistance += range.generateNumber();
     this.eating_type += range.generateNumber();
     if (this.generation % 100)
