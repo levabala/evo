@@ -1,0 +1,8 @@
+{
+  "name": "evo",
+  "version": "1.34",
+  "repository": "github:levabala/evo",
+  "dependencies": {
+    "SimplePlot": "github:levabala/simpleplot"
+  }
+}
