@@ -1,23 +1,25 @@
 class InfoBox {
   constructor(div) {
     this.div = div;
-    this.data = {}; //name - element
+    this.data = {}; // name - element
   }
 
-  _createInfoEl(name) {
-    let div = document.createElement("div");
-    let title = document.createElement("b");
-    title.innerHTML = name + ": ";
-    let value_span = document.createElement("div");
+  static _createInfoEl(name) {
+    const div = document.createElement("div");
+    const title = document.createElement("b");
+    title.innerHTML = `${name}: `;
+    const value_span = document.createElement("div");
     value_span.setAttribute("style", "display: inline-block; float: right; margin-left: 5px");
     div.appendChild(title);
     div.appendChild(value_span);
-    div.setValue = (new_value) => value_span.innerHTML = new_value;
+    div.setValue = function setDivValue(new_value) {
+      this.children[1].innerHTML = new_value;
+    };
     return div;
   }
 
   addInfo(id, info) {
-    let el = this._createInfoEl(info.name);
+    const el = InfoBox._createInfoEl(info.name);
     el.setValue(info.value);
     this.data[id] = el;
     this.div.appendChild(el);
@@ -33,9 +35,8 @@ class InfoBox {
 class Info {
   constructor(
     name, value,
-    process_fun = (val) => {
-      return val;
-    }, max_digits = 3) {
+    process_fun = val => val, max_digits = 3,
+  ) {
     Reactor.apply(this, []);
 
     this.name = name;
@@ -43,7 +44,7 @@ class Info {
     this.process_fun = process_fun;
     this._value = value;
 
-    //events
+    // events
     this.registerEvent("changed");
   }
 
@@ -52,7 +53,7 @@ class Info {
   }
 
   set value(value) {
-    this._value = Math.round(value * Math.pow(10, this.max_digits)) / Math.pow(10, this.max_digits);
+    this._value = Math.round(value * (10 ** this.max_digits)) / (10 ** this.max_digits);
     this.dispatchEvent("changed", this._value);
   }
 
