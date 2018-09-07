@@ -62,7 +62,7 @@ class SimObserver {
     this.info.interaction_per_sec.value = controller.interaction_per_sec_average;
     this.info.food_variety.value = controller.NEW_CREATURE_FOOD_VARIETY;
     this.info.tick_duration.value = this.sim_master.last_ticks_duration_average;
-    this.info.max_effectivity.value = controller.maximal_effectivity;
+    this.info.max_effectivity.value = controller.maximal_effectivity_average;
 
     this.dispatchEvent("updates");
   }

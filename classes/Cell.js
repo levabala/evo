@@ -18,6 +18,7 @@ class Cell {
     this.is_sea = is_sea;
     this.sea_level = sea_level;
     this.sea_rate = sea_rate;
+    this._last_drawed_food_amount = 0;
 
     // constants
     this.MAX_FOOD_AMOUNT = 0.2;

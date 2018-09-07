@@ -1,5 +1,5 @@
 class SimMap {
-  constructor(width, height, fertility_base = 0.000002, fertility_range = 0.00000199) {
+  constructor(width, height, fertility_base = 0.000004, fertility_range = 0.000004) {
     // add reactor
     Reactor.apply(this, []);
 
@@ -72,7 +72,7 @@ class SimMap {
     const fertility_height = 0;
     const fertility_map = this._createPerlinMap(this.changing_fertility, fertility_seed, fertility_height);
 
-    const changing_food = 64;
+    const changing_food = 92;
     const food_type_seed = Math.random();
     const food_type_height = 0;
     const food_map = this._createPerlinMap(changing_food, food_type_seed, food_type_height);
@@ -85,7 +85,7 @@ class SimMap {
           this.sea_cells_count++;
         map[x][y] = new Cell(
           new P(x, y),
-          this.fertility_base + (fertility_map[x][y] - 0.5) * 2 * this.fertility_range,
+          this.fertility_base - (fertility_map[x][y]) * this.fertility_range,
           food_map[x][y],
           is_sea,
           sea_map[x][y],

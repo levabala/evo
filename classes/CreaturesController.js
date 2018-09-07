@@ -10,6 +10,8 @@ class CreaturesController {
     this.maximal_generation = 0;
     this.maximal_age = 0;
     this.maximal_effectivity = 0;
+    this.maximal_effectivity_buffer = [];
+    this.maximal_effectivity_average = 0;
     this.maximal_eaten_creatures = 0;
     this.maximal_actions_count = 0;
     this.maximal_children = 0;
@@ -45,7 +47,7 @@ class CreaturesController {
     this.NEW_CREATURES_PER_SECS = 1;
     this.NEW_CREATURE_FOOD_VARIETY = -0.35;
     this.NEW_CREATURE_MAX_AGE = 200 * 1000;
-    this.MOVE_COST = 0.01;
+    this.MOVE_COST = 0.003;
     this.RANDOM_CREATURES_ADDED_PER_SECOND_FOR_CELL = 0.0003;
     this.MAX_NEW_CREATURES_AT_ONCE = 1000000;
 
@@ -122,6 +124,11 @@ class CreaturesController {
       this.eaten_creatures_per_sec_average += this.eaten_creatures_per_sec_buffer[i];
     this.eaten_creatures_per_sec_average /= this.eaten_creatures_per_sec_buffer.length;
 
+    this.maximal_effectivity_average = 0;
+    for (let i = 0; i < this.maximal_effectivity_buffer.length; i++)
+      this.maximal_effectivity_average += this.maximal_effectivity_buffer[i];
+    this.maximal_effectivity_average /= this.maximal_effectivity_buffer.length;
+
     return true;
   }
 
@@ -157,9 +164,8 @@ class CreaturesController {
 
       // interact other one
       const pos = creature.coordinates;
-      const {
-        near_creatures,
-      } = this.map.cells[pos.x][pos.y];
+      // const near_creatures = this.map.cells[pos.x][pos.y];
+      const near_creatures = this.map.cells[pos.x][pos.y].walking_creatures;
       for (let i2 = 0; i2 < near_creatures.length; i2++) {
         const c = near_creatures[i2];
         if (
@@ -193,6 +199,10 @@ class CreaturesController {
       count++;
     }
     this.creatures_count = count;
+
+    this.maximal_effectivity_buffer.push(this.maximal_effectivity);
+    if (this.maximal_effectivity_buffer.length > 45)
+      this.maximal_effectivity_buffer.shift();
   }
 
   reset() {
@@ -434,7 +444,7 @@ class CreaturesController {
     now_cell.removeCreature(creature);
 
     // remove from near cells
-    const p = creature.coordinates;
+    /* const p = creature.coordinates;
     const near_cells_last = [
       this.map.cellAtCoordinates(p.x - 1, p.y),
       this.map.cellAtCoordinates(p.x - 1, p.y - 1),
@@ -446,7 +456,7 @@ class CreaturesController {
       this.map.cellAtCoordinates(p.x + 1, p.y - 1),
     ];
     for (let i = 0; i < near_cells_last.length; i++)
-      near_cells_last[i].removeNearCreature(creature);
+      near_cells_last[i].removeNearCreature(creature); */
 
     // update coordinates
     creature.coordinates = new_position;
@@ -455,18 +465,18 @@ class CreaturesController {
     new_cell.addCreature(creature);
 
     // add to new near cells
-    const near_cells_now = [
-      this.map.cellAtCoordinates(new_position.x - 1, new_position.y),
-      this.map.cellAtCoordinates(new_position.x - 1, new_position.y - 1),
-      this.map.cellAtCoordinates(new_position.x, new_position.y - 1),
-      this.map.cellAtCoordinates(new_position.x + 1, new_position.y),
-      this.map.cellAtCoordinates(new_position.x + 1, new_position.y + 1),
-      this.map.cellAtCoordinates(new_position.x, new_position.y + 1),
-      this.map.cellAtCoordinates(new_position.x - 1, new_position.y + 1),
-      this.map.cellAtCoordinates(new_position.x + 1, new_position.y - 1),
-    ];
-    for (let i = 0; i < near_cells_now.length; i++)
-      near_cells_now[i].addNearCreature(creature);
+    /* const near_cells_now = [
+       this.map.cellAtCoordinates(new_position.x - 1, new_position.y),
+       this.map.cellAtCoordinates(new_position.x - 1, new_position.y - 1),
+       this.map.cellAtCoordinates(new_position.x, new_position.y - 1),
+       this.map.cellAtCoordinates(new_position.x + 1, new_position.y),
+       this.map.cellAtCoordinates(new_position.x + 1, new_position.y + 1),
+       this.map.cellAtCoordinates(new_position.x, new_position.y + 1),
+       this.map.cellAtCoordinates(new_position.x - 1, new_position.y + 1),
+       this.map.cellAtCoordinates(new_position.x + 1, new_position.y - 1),
+     ];
+     for (let i = 0; i < near_cells_now.length; i++)
+       near_cells_now[i].addNearCreature(creature); */
 
     // downgrade satiety
     creature.satiety -= this.MOVE_COST;

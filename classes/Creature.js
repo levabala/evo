@@ -32,7 +32,7 @@ class Creature {
 
     // constants
     this.REST_FATIGUE_REMOVE = 0.005;
-    this.FOOD_PER_ACTION = 0.3;
+    this.FOOD_PER_ACTION = 0.1;
     this.FATIGUE_DONWGRADE_BASE = 0.005;
     this.FATIGUE_DONWGRADE_NOW = this.FATIGUE_DONWGRADE_BASE;
     this.FATIGUE_DONWGRADE_MIN = 0.001;
